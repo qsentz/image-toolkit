@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eApp Processing & Rename Toolkit</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- JSZip for zipping files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        },
+                        darkBg: '#0f172a',
+                        panelBg: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', 'Chakra Petch', sans-serif;
+            background-color: #0f172a;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-brand-500 text-white p-2.5 rounded-xl shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-brand-500 to-cyan-400 bg-clip-text text-transparent">
+                        Image Utilities Toolkit
+                    </h1>
+                    <p class="text-xs text-slate-400">Web-based Base64 Decoder & Batch File Renamer</p>
+                </div>
+            </div>
+            
+            <!-- Tab Controls -->
+            <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700/50">
+                <button onclick="switchTab('decode-tab')" id="btn-decode-tab" class="tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-brand-600 text-white shadow-md">
+                    <i class="fa-solid fa-file-code mr-2"></i>Base64 → eApplication
+                </button>
+                <button onclick="switchTab('rename-tab')" id="btn-rename-tab" class="tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-signature mr-2"></i>Rename Files
+                </button>
+                <button onclick="switchTab('encode-tab')" id="btn-encode-tab" class="tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-file-export mr-2"></i>Image → Base64
+                </button>
+                <button onclick="switchTab('paste-tab')" id="btn-paste-tab" class="tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-paste mr-2"></i>Base64 → Image
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6">
+
+        <!-- ==================== TAB 1: DECODE BASE64 ==================== -->
+        <div id="decode-tab" class="tab-content space-y-6">
+            <!-- Instructions, Mapping, and Dropzone -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Dropzone Left (1 Col) -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-200 mb-2">1. Import File</h2>
+                        <p class="text-xs text-slate-400 mb-6">อัปโหลดไฟล์ <code class="text-brand-400 font-mono">eApp_data.txt</code></p>
+                    </div>
+
+                    <!-- Drag & Drop Area -->
+                    <div id="decode-dropzone" class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-xl p-6 text-center cursor-pointer bg-slate-950/40 relative group flex-1 flex flex-col justify-center items-center">
+                        <input type="file" id="decodeFileInput" accept=".txt" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <div class="space-y-3 pointer-events-none">
+                            <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400 group-hover:text-brand-500 group-hover:bg-slate-800/80 transition-colors">
+                                <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                            </div>
+                            <div class="text-slate-300 font-medium text-sm">Upload File</div>
+                            <div class="text-[10px] text-slate-500">.txt format only</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mapping Center (2 Col) -->
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col">
+                    <h2 class="text-lg font-semibold text-slate-200 mb-1">2. Rename Mapping (Optional)</h2>
+                    <p class="text-xs text-slate-400 mb-3">ใส่ข้อมูล Mapping หากต้องการแปลงชื่อไฟล์ หรือกำหนด Path ใน ZIP โดยอัตโนมัติ</p>
+                    
+                    <textarea id="decodeMappingText" placeholder="mychannel-devicesales-20251228161011652.jpg=/export/home/MNT_NFS/DigitalApp/MYCH/Convert/eform/20260611/20260611134258_SERVICE260611134126-CO37277_6a2a5896e8b84f82f92bf35f_MC_SML_eform.jpg" class="w-full flex-1 p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-xs font-mono text-slate-300 focus:outline-none focus:border-brand-500 placeholder-slate-700 resize-none min-h-[140px]"></textarea>
+                    
+                    <button id="btnReprocessDecode" onclick="reprocessDecode()" disabled class="mt-3 py-2.5 w-full bg-slate-800 text-slate-500 rounded-xl text-sm font-semibold transition-all cursor-not-allowed">
+                        <i class="fa-solid fa-rotate mr-2"></i>Apply Mapping & Reprocess
+                    </button>
+                </div>
+
+                <!-- Stats Panel Right (1 Col) -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-200 mb-4">Processing Stats</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 text-center">
+                                <div class="text-[10px] text-slate-400 uppercase tracking-wider">Total</div>
+                                <div id="dec-total" class="text-xl font-bold text-slate-200 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 text-center">
+                                <div class="text-[10px] text-emerald-400 uppercase tracking-wider">Success</div>
+                                <div id="dec-success" class="text-xl font-bold text-emerald-400 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 text-center">
+                                <div class="text-[10px] text-amber-400 uppercase tracking-wider">Duplicate</div>
+                                <div id="dec-duplicate" class="text-xl font-bold text-amber-400 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 text-center">
+                                <div class="text-[10px] text-rose-400 uppercase tracking-wider">Error</div>
+                                <div id="dec-error" class="text-xl font-bold text-rose-400 mt-1">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="mt-6">
+                        <button id="btnDownloadZip" onclick="downloadDecodeZip()" disabled class="w-full py-3.5 px-4 bg-slate-800 text-slate-400 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-not-allowed">
+                            <i class="fa-solid fa-file-zipper"></i>
+                            <span>Download All (ZIP)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Console Log Panel -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 overflow-hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></span> Terminal Logs
+                    </span>
+                    <button onclick="clearDecodeLogs()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                        Clear Logs
+                    </button>
+                </div>
+                <div id="decodeConsole" class="h-44 bg-black/55 rounded-xl p-4 font-mono text-xs overflow-y-auto space-y-1.5 border border-slate-950/85">
+                    <div class="text-slate-500">> System initialized. Awaiting file import...</div>
+                </div>
+            </div>
+
+            <!-- Image Results Grid -->
+            <div>
+                <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-images text-brand-500"></i>
+                    Decoded Image Previews (<span id="galleryCount">0</span>)
+                </h3>
+                <div id="imageGallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Dynamic Items will be appended here -->
+                    <div class="col-span-full py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl">
+                        <i class="fa-regular fa-image text-4xl mb-3 block opacity-40"></i>
+                        ไม่มีรูปภาพที่พร้อมแสดงผลในขณะนี้
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==================== TAB 2: BATCH RENAME FILE ==================== -->
+        <div id="rename-tab" class="tab-content space-y-6 hidden">
+            <!-- Double Panel Settings and Mapping -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Drop Original Files Left -->
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-200 mb-2">Upload Original Files to Rename</h2>
+                        <p class="text-sm text-slate-400 mb-6">อัปโหลดไฟล์ทั้งหมดที่คุณต้องการแปลงชื่อ (เช่น ไฟล์ PDF หรือรูปภาพประเภทต่างๆ จากเครื่องของคุณ)</p>
+                    </div>
+
+                    <!-- Multiple Files Dropzone -->
+                    <div class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-xl p-10 text-center cursor-pointer bg-slate-950/40 relative group">
+                        <input type="file" id="renameFilesInput" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <div class="space-y-3 pointer-events-none">
+                            <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400 group-hover:text-brand-500 group-hover:bg-slate-800/80 transition-colors">
+                                <i class="fa-solid fa-folder-open text-xl"></i>
+                            </div>
+                            <div class="text-slate-300 font-medium">Select multiple files or drag them here</div>
+                            <div class="text-xs text-slate-500">Supports any file type (e.g. PDF, JPG, PNG)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mapping Text Box Right -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col">
+                    <h3 class="text-lg font-semibold text-slate-200 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-link text-brand-500"></i>
+                        Mapping Definition
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">ป้อนข้อมูลการจับคู่เพื่อแปลงชื่อไฟล์ คัดลอกรูปแบบจากไฟล์ PowerShell มาวางได้เลย</p>
+                    
+                    <div class="flex-1 min-h-[180px] flex flex-col">
+                        <textarea id="mappingText" placeholder="'old_file_name.pdf'='new_file_name.pdf'&#10;'image1.jpg'='0891234567_image1.jpg'" class="w-full flex-1 p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-xs font-mono text-slate-300 focus:outline-none focus:border-brand-500 placeholder-slate-700 resize-none" style="min-height: 180px;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process & Export Section -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-200">Matching Directory & Review</h3>
+                        <p class="text-xs text-slate-400 mt-1">ตารางแสดงไฟล์ทั้งหมดที่อัปโหลดเข้ามา พร้อมระบุสถานะและชื่อไฟล์ปลายทางที่ถูกแปลงตาม Mapping</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="processRenameMapping()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 active:scale-95 transition-all text-white text-sm font-semibold rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            วิเคราะห์/จับคู่ชื่อไฟล์
+                        </button>
+                        <button id="btnDownloadRenameZip" onclick="downloadRenameZip()" disabled class="px-5 py-2.5 bg-slate-800 text-slate-500 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-not-allowed">
+                            <i class="fa-solid fa-file-zipper"></i>
+                            Download Renamed Files (ZIP)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Preview -->
+                <div class="overflow-x-auto border border-slate-800 rounded-xl bg-slate-950/20">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-950/60 border-b border-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="py-3 px-4">#</th>
+                                <th class="py-3 px-4">Original Filename</th>
+                                <th class="py-3 px-4">Target Filename (Mapped)</th>
+                                <th class="py-3 px-4 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="renameTableBody" class="text-sm divide-y divide-slate-850">
+                            <!-- Empty State row -->
+                            <tr>
+                                <td colspan="4" class="py-12 text-center text-slate-500">
+                                    <i class="fa-solid fa-file-signature text-3xl mb-2 block opacity-30"></i>
+                                    ยังไม่ได้อัปโหลดไฟล์ต้นฉบับเพื่อแปลงชื่อ
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: ENCODE IMAGE TO BASE64 ==================== -->
+        <div id="encode-tab" class="tab-content space-y-6 hidden">
+            <!-- Upload & Convert -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-200 mb-1">Import Images</h2>
+                        <p class="text-sm text-slate-400">เลือกไฟล์รูปภาพได้หลายไฟล์พร้อมกัน (Multiple) เพื่อแปลงเป็น Base64</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="convertImagesToBase64()" id="btnConvertEncode" disabled class="px-5 py-2.5 bg-slate-800 text-slate-500 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-not-allowed">
+                            <i class="fa-solid fa-bolt"></i>
+                            Convert to Base64
+                        </button>
+                        <button onclick="copyAllEncodeResults()" id="btnCopyAllEncode" disabled class="px-5 py-2.5 bg-slate-800 text-slate-500 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-not-allowed">
+                            <i class="fa-solid fa-copy"></i>
+                            Copy All (name=base64)
+                        </button>
+                        <button onclick="downloadEncodeResultsTxt()" id="btnDownloadEncodeTxt" disabled class="px-5 py-2.5 bg-slate-800 text-slate-500 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-not-allowed">
+                            <i class="fa-solid fa-download"></i>
+                            Download .txt
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Multiple Files Dropzone -->
+                <div class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-xl p-10 text-center cursor-pointer bg-slate-950/40 relative group">
+                    <input type="file" id="encodeFilesInput" accept="image/*" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    <div class="space-y-3 pointer-events-none">
+                        <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400 group-hover:text-brand-500 group-hover:bg-slate-800/80 transition-colors">
+                            <i class="fa-solid fa-images text-xl"></i>
+                        </div>
+                        <div class="text-slate-300 font-medium" id="encodeDropzoneLabel">Select multiple images or drag them here</div>
+                        <div class="text-xs text-slate-500">Supports JPG, PNG, GIF, BMP, WEBP ฯลฯ</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results List -->
+            <div>
+                <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-list text-brand-500"></i>
+                    Base64 Results (<span id="encodeResultCount">0</span>)
+                </h3>
+                <div id="encodeResultsList" class="space-y-4">
+                    <div class="py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl">
+                        <i class="fa-solid fa-file-code text-4xl mb-3 block opacity-40"></i>
+                        ยังไม่มีผลลัพธ์ กรุณาอัปโหลดรูปภาพแล้วกด Convert
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 4: PASTE BASE64 TO IMAGE ==================== -->
+        <div id="paste-tab" class="tab-content space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Paste Input (3 Col) -->
+                <div class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col">
+                    <h2 class="text-lg font-semibold text-slate-200 mb-2">Paste Base64</h2>
+                    <p class="text-xs text-slate-400 mb-3">
+                        วาง Base64 ได้ทีละหลายรูป (1 บรรทัด = 1 รูป) รองรับทั้งรูปแบบ <code class="text-brand-400 font-mono">ชื่อไฟล์=base64</code>,
+                        <code class="text-brand-400 font-mono">data:image/...;base64,...</code> หรือวาง Base64 ดิบๆ เฉยๆ ก็ได้ (ระบบจะตั้งชื่อให้อัตโนมัติ)
+                        — วางเพิ่มแล้วกด Convert ซ้ำได้เรื่อยๆ รูปใหม่จะถูกเพิ่มต่อท้ายแกลเลอรีเดิมโดยไม่ลบของเก่า
+                    </p>
+                    <textarea id="pasteBase64Input" placeholder="/9j/4AAQSkZJRgABAQAAAQABAAD...&#10;/9j/4AAQSkZJRgABAQAAAQABAAD... (อีกรูปหนึ่ง วางต่อบรรทัดถัดไปได้เลย)" class="w-full flex-1 p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-xs font-mono text-slate-300 focus:outline-none focus:border-brand-500 placeholder-slate-700 resize-none min-h-[200px]"></textarea>
+
+                    <div class="flex flex-wrap gap-3 mt-4">
+                        <button onclick="convertPastedBase64()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-sm font-semibold rounded-xl flex items-center gap-2 transition-all">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            Convert to Image
+                        </button>
+                        <button onclick="clearPasteAll()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl flex items-center gap-2 transition-all">
+                            <i class="fa-solid fa-trash"></i>
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Panel (1 Col) -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-200 mb-4">Processing Stats</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 text-center">
+                                <div class="text-[10px] text-slate-400 uppercase tracking-wider">Total</div>
+                                <div id="paste-total" class="text-xl font-bold text-slate-200 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 text-center">
+                                <div class="text-[10px] text-emerald-400 uppercase tracking-wider">Success</div>
+                                <div id="paste-success" class="text-xl font-bold text-emerald-400 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 text-center col-span-2">
+                                <div class="text-[10px] text-rose-400 uppercase tracking-wider">Error</div>
+                                <div id="paste-error" class="text-xl font-bold text-rose-400 mt-1">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action button -->
+                    <div class="mt-6">
+                        <button id="btnDownloadPasteZip" onclick="downloadPasteZip()" disabled class="w-full py-3.5 px-4 bg-slate-800 text-slate-400 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-not-allowed">
+                            <i class="fa-solid fa-file-zipper"></i>
+                            <span>Download All (ZIP)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Console Log Panel -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 overflow-hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></span> Terminal Logs
+                    </span>
+                    <button onclick="clearPasteLogs()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                        Clear Logs
+                    </button>
+                </div>
+                <div id="pasteConsole" class="h-44 bg-black/55 rounded-xl p-4 font-mono text-xs overflow-y-auto space-y-1.5 border border-slate-950/85">
+                    <div class="text-slate-500">> System initialized. Awaiting Base64 input...</div>
+                </div>
+            </div>
+
+            <!-- Image Results Grid -->
+            <div>
+                <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-images text-brand-500"></i>
+                    Converted Image Previews (<span id="pasteGalleryCount">0</span>)
+                </h3>
+                <div id="pasteGallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div class="col-span-full py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl">
+                        <i class="fa-regular fa-image text-4xl mb-3 block opacity-40"></i>
+                        ยังไม่มีรูปภาพที่แปลงจาก Base64 ในขณะนี้
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950/80 py-4 px-6 text-center text-xs text-slate-500">
+        <div>Image Toolkit Platform &copy; 2026. Processed safely inside your client browser sandbox by TSMC Team.</div>
+    </footer>
+
+
+    <script>
+        // ==================== GLOBAL APP STATE ====================
+        let currentTab = 'decode-tab';
+        
+        // 1. Decode base64 State
+        let currentDecodeLines = []; // เก็บ Data ที่อัปโหลดไว้สำหรับ Re-process
+        let decodeZip = new JSZip();
+        let decodeStats = { total: 0, success: 0, duplicate: 0, error: 0 };
+        let decodedFileNames = new Set();
+        let decodedFilesMap = {};
+
+        // 2. Rename File State
+        let selectedRenameFiles = []; 
+        let renamedMappingResults = [];
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function switchTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+                btn.classList.add('text-slate-400', 'hover:text-slate-200');
+            });
+
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            activeBtn.classList.remove('text-slate-400', 'hover:text-slate-200');
+            activeBtn.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+        }
+
+        // ==================== TAB 1: DECODE BASE64 ENGINE ====================
+        const decodeFileInput = document.getElementById('decodeFileInput');
+        const decodeConsole = document.getElementById('decodeConsole');
+        const imageGallery = document.getElementById('imageGallery');
+        const btnDownloadZip = document.getElementById('btnDownloadZip');
+        const btnReprocessDecode = document.getElementById('btnReprocessDecode');
+
+        function appendDecodeLog(message, type = 'info') {
+            const line = document.createElement('div');
+            let colorClass = 'text-slate-400';
+            let prefix = '> ';
+
+            if (type === 'success') {
+                colorClass = 'text-emerald-400';
+                prefix = '✅ ';
+            } else if (type === 'duplicate') {
+                colorClass = 'text-amber-400';
+                prefix = '⚠️ ';
+            } else if (type === 'error') {
+                colorClass = 'text-rose-400';
+                prefix = '❌ ';
+            } else if (type === 'title') {
+                colorClass = 'text-cyan-400 font-bold border-b border-slate-800 pb-1 mt-3';
+                prefix = '';
+            }
+
+            line.className = colorClass;
+            line.textContent = `${prefix}${message}`;
+            decodeConsole.appendChild(line);
+            decodeConsole.scrollTop = decodeConsole.scrollHeight;
+        }
+
+        function clearDecodeLogs() {
+            decodeConsole.innerHTML = '<div class="text-slate-500">> Logs cleared. Ready.</div>';
+        }
+
+        function updateDecodeStatsUI() {
+            document.getElementById('dec-total').textContent = decodeStats.total;
+            document.getElementById('dec-success').textContent = decodeStats.success;
+            document.getElementById('dec-duplicate').textContent = decodeStats.duplicate;
+            document.getElementById('dec-error').textContent = decodeStats.error;
+            document.getElementById('galleryCount').textContent = Object.keys(decodedFilesMap).length;
+        }
+
+        function cleanBase64(b64) {
+            if (!b64) return "";
+            let cleaned = b64.replace(/^\s*data:image\/(?:jpeg|jpg|png);base64,/i, '').replace(/\s/g, '');
+            let mod = cleaned.length % 4;
+            if (mod !== 0) {
+                cleaned += '='.repeat(4 - mod);
+            }
+            return cleaned;
+        }
+
+        // แปลง Base64 (Full String) เป็น Uint8Array เพื่อใช้วิเคราะห์ Header แบบละเอียด
+        function base64ToBytes(base64) {
+            const binaryStr = atob(base64);
+            const bytes = new Uint8Array(binaryStr.length);
+            for (let i = 0; i < binaryStr.length; i++) {
+                bytes[i] = binaryStr.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // อ่านค่า Width/Height จาก Header ของไฟล์ภาพโดยตรง (ไม่ต้องรอโหลดผ่าน <img>)
+        function getImageDimensions(bytes, ext) {
+            try {
+                if (ext === 'png') {
+                    // IHDR chunk: 8-byte signature + 4-byte length + "IHDR" -> width @16-19, height @20-23 (big-endian)
+                    const width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+                    const height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+                    return { width: width >>> 0, height: height >>> 0 };
+                }
+                if (ext === 'gif') {
+                    const width = bytes[6] | (bytes[7] << 8);
+                    const height = bytes[8] | (bytes[9] << 8);
+                    return { width, height };
+                }
+                if (ext === 'bmp') {
+                    // BITMAPINFOHEADER: width @18-21, height @22-25 (little-endian, signed)
+                    const width = (bytes[18] | (bytes[19] << 8) | (bytes[20] << 16) | (bytes[21] << 24)) >>> 0;
+                    let height = (bytes[22] | (bytes[23] << 8) | (bytes[24] << 16) | (bytes[25] << 24)) | 0;
+                    return { width, height: Math.abs(height) };
+                }
+                if (ext === 'jpg') {
+                    let i = 2; // ข้าม SOI marker (FFD8)
+                    while (i < bytes.length - 8) {
+                        if (bytes[i] !== 0xFF) { i++; continue; }
+                        const marker = bytes[i + 1];
+                        // SOF markers (Baseline/Progressive ฯลฯ) ยกเว้น DHT(C4)/JPG(C8)/DAC(CC)
+                        if (marker >= 0xC0 && marker <= 0xCF && marker !== 0xC4 && marker !== 0xC8 && marker !== 0xCC) {
+                            const height = (bytes[i + 5] << 8) | bytes[i + 6];
+                            const width = (bytes[i + 7] << 8) | bytes[i + 8];
+                            return { width, height };
+                        }
+                        const segLength = (bytes[i + 2] << 8) | bytes[i + 3];
+                        if (segLength < 2) break; // ป้องกันลูปไม่รู้จบกรณีข้อมูลเสีย
+                        i += 2 + segLength;
+                    }
+                    return null;
+                }
+                if (ext === 'webp') {
+                    // VP8 (lossy): dimensions @26-29 (14-bit each, little-endian)
+                    if (bytes[12] === 0x56 && bytes[13] === 0x50 && bytes[14] === 0x38 && bytes[15] === 0x20) {
+                        const width = (bytes[26] | (bytes[27] << 8)) & 0x3FFF;
+                        const height = (bytes[28] | (bytes[29] << 8)) & 0x3FFF;
+                        return { width, height };
+                    }
+                    // VP8L (lossless): dimensions @21-24 (14-bit each)
+                    if (bytes[12] === 0x56 && bytes[13] === 0x50 && bytes[14] === 0x38 && bytes[15] === 0x4C) {
+                        const b0 = bytes[21], b1 = bytes[22], b2 = bytes[23], b3 = bytes[24];
+                        const width = 1 + (((b1 & 0x3F) << 8) | b0);
+                        const height = 1 + (((b3 & 0x0F) << 10) | (b2 << 2) | ((b1 & 0xC0) >> 6));
+                        return { width, height };
+                    }
+                    return null;
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // ตรวจสอบชนิดไฟล์จริงจาก Magic Bytes ของข้อมูลที่ Decode ออกมา (ไม่พึ่งพานามสกุลไฟล์เดิม)
+        function detectFileType(base64) {
+            const fallback = { ext: 'jpg', mime: 'image/jpeg', label: 'JPG (default)' };
+            if (!base64 || base64.length < 8) return fallback;
+
+            try {
+                // ถอดรหัสเฉพาะส่วนหัวของไฟล์ (24 ตัวอักษร base64 = 18 bytes) พอสำหรับตรวจ Signature ทุกแบบ
+                const head = base64.substring(0, 24);
+                const binaryStr = atob(head);
+                const bytes = [];
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes.push(binaryStr.charCodeAt(i));
+                }
+                const hex = bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join('');
+
+                if (hex.startsWith('FFD8FF')) return { ext: 'jpg', mime: 'image/jpeg', label: 'JPG' };
+                if (hex.startsWith('89504E47')) return { ext: 'png', mime: 'image/png', label: 'PNG' };
+                if (hex.startsWith('47494638')) return { ext: 'gif', mime: 'image/gif', label: 'GIF' };
+                if (hex.startsWith('25504446')) return { ext: 'pdf', mime: 'application/pdf', label: 'PDF' };
+                if (hex.startsWith('424D')) return { ext: 'bmp', mime: 'image/bmp', label: 'BMP' };
+                if (hex.startsWith('49492A00') || hex.startsWith('4D4D002A')) return { ext: 'tiff', mime: 'image/tiff', label: 'TIFF' };
+                if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+                    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) {
+                    return { ext: 'webp', mime: 'image/webp', label: 'WEBP' };
+                }
+                if (hex.startsWith('504B0304')) return { ext: 'zip', mime: 'application/zip', label: 'ZIP/DOCX/XLSX' };
+
+                return { ext: 'jpg', mime: 'image/jpeg', label: 'Unknown (fallback JPG)' };
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        // ดึงและแปลง Mapping จาก Textarea
+        function getDecodeMapping() {
+            const rawMap = document.getElementById('decodeMappingText').value;
+            const mapObj = {};
+            rawMap.split('\n').forEach(line => {
+                const parts = line.split('=');
+                if (parts.length >= 2) {
+                    let key = parts[0].trim().replace(/^['"]|['"]$/g, '');
+                    // รองรับ Value ที่อาจจะมีเครื่องหมาย = อยู่ในชื่อด้วยการ join กลับ
+                    let val = parts.slice(1).join('=').trim().replace(/^['"]|['"]$/g, '');
+                    if (key && val) {
+                        mapObj[key] = val;
+                    }
+                }
+            });
+            return mapObj;
+        }
+
+        // Event listener สำหรับการอัพโหลดไฟล์ TXT
+        decodeFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const text = evt.target.result;
+                currentDecodeLines = text.split(/\r?\n/);
+                
+                // เปิดใช้งานปุ่ม Reprocess
+                btnReprocessDecode.disabled = false;
+                btnReprocessDecode.className = "mt-3 py-2.5 w-full bg-brand-600 hover:bg-brand-500 active:scale-95 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-brand-500/20";
+                
+                appendDecodeLog(`File loaded: ${file.name}`, 'title');
+                parseAndDecode();
+            };
+            reader.readAsText(file, 'UTF-8');
+        });
+
+        // ฟังก์ชันสั่งประมวลผลซ้ำเมื่อแก้ Mapping
+        function reprocessDecode() {
+            if(currentDecodeLines.length > 0) {
+                parseAndDecode();
+            }
+        }
+
+        function parseAndDecode() {
+            // Reset States
+            decodeZip = new JSZip();
+            decodeStats = { total: 0, success: 0, duplicate: 0, error: 0 };
+            decodedFileNames.clear();
+            decodedFilesMap = {};
+            
+            imageGallery.innerHTML = '';
+            clearDecodeLogs();
+            updateDecodeStatsUI();
+
+            btnDownloadZip.disabled = true;
+            btnDownloadZip.className = "w-full py-3.5 px-4 bg-slate-800 text-slate-400 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-not-allowed";
+
+            appendDecodeLog(`Starting processing data...`, 'title');
+
+            const decodeMap = getDecodeMapping();
+            let mobileNo = "";
+            let eAppAccum = "";
+            let currentField = "";
+
+            const flushEntry = () => {
+                // หากไม่มีข้อมูลทั้งคู่ ให้ข้ามไป
+                if (!mobileNo.trim() && !eAppAccum.trim()) {
+                    mobileNo = ""; eAppAccum = ""; currentField = "";
+                    return;
+                }
+
+                decodeStats.total++;
+                let trimmedMobile = mobileNo.trim();
+
+                if (!trimmedMobile) {
+                    appendDecodeLog(`Record #${decodeStats.total} : Unknown -> Fail (No MobileNo)`, 'error');
+                    decodeStats.error++;
+                } else if (!eAppAccum.trim()) {
+                    appendDecodeLog(`Record #${decodeStats.total} : ${trimmedMobile} -> Fail (No Data eApp)`, 'error');
+                    decodeStats.error++;
+                } else {
+                    let cleanedB64 = cleanBase64(eAppAccum);
+                    if (!cleanedB64) {
+                        appendDecodeLog(`Record #${decodeStats.total} : ${trimmedMobile} -> Fail (Bad Base64)`, 'error');
+                        decodeStats.error++;
+                    } else {
+                        // ตรวจชนิดไฟล์จริงจาก Magic Bytes ก่อนตั้งชื่อ/นามสกุล
+                        let fileType = detectFileType(cleanedB64);
+
+                        // อ่าน Dimension (Width x Height) จาก Header ของไฟล์ภาพ
+                        let dimensions = null;
+                        try {
+                            const fullBytes = base64ToBytes(cleanedB64);
+                            dimensions = getImageDimensions(fullBytes, fileType.ext);
+                        } catch (e) {
+                            dimensions = null;
+                        }
+                        let dimensionLabel = (dimensions && dimensions.width && dimensions.height)
+                            ? `${dimensions.width}x${dimensions.height}px`
+                            : 'N/A';
+
+                        // วิเคราะห์หาชื่อ/Path จาก Mapping
+                        let origFileName = `${trimmedMobile}.${fileType.ext}`;
+                        // รองรับ Mapping ที่อ้างชื่อแบบ .jpg (ค่าดั้งเดิม), นามสกุลจริงที่ตรวจพบ, หรือไม่ใส่นามสกุลเลย
+                        let targetZipPath = decodeMap[`${trimmedMobile}.jpg`] || decodeMap[origFileName] || decodeMap[trimmedMobile];
+                        let isMapped = !!targetZipPath;
+
+                        if (!targetZipPath) {
+                            // ถ้าไม่ Map ให้ตั้งโฟลเดอร์เริ่มต้นให้
+                            targetZipPath = `output_eApp_images/${origFileName}`;
+                        } else if (targetZipPath.startsWith('/')) {
+                            // JSZip ไม่ต้องการ slash ตัวแรกสุดเพื่อสร้าง Directory ให้อยู่ข้างในสุด
+                            targetZipPath = targetZipPath.substring(1);
+                        }
+
+                        // เช็คชื่อซ้ำตาม Path ปลายทาง
+                        let isDuplicate = false;
+                        if (decodedFileNames.has(targetZipPath)) {
+                            isDuplicate = true;
+                            decodeStats.duplicate++;
+                            const d = new Date();
+                            const timestamp = String(d.getHours()).padStart(2, '0') + 
+                                              String(d.getMinutes()).padStart(2, '0') + 
+                                              String(d.getSeconds()).padStart(2, '0') + "_" + 
+                                              String(d.getMilliseconds()).padStart(3, '0');
+                            
+                            // แทรก _dup_ เข้าไปก่อนนามสกุล
+                            if(targetZipPath.includes('.')) {
+                                targetZipPath = targetZipPath.replace(/(\.[\w\d_-]+)$/i, `_dup_${timestamp}$1`);
+                            } else {
+                                targetZipPath += `_dup_${timestamp}`;
+                            }
+                        }
+                        
+                        decodedFileNames.add(targetZipPath);
+                        // ดึงเฉพาะชื่อไฟล์สุดท้ายมาแสดงใน UI Gallery
+                        let displayFileName = targetZipPath.split('/').pop() || targetZipPath;
+
+                        try {
+                            // ยัดเข้า ZIP โดยใช้ Target Path ที่ได้มา JSZip จะสร้างโครง Folder ให้เอง
+                            decodeZip.file(targetZipPath, cleanedB64, { base64: true });
+                            
+                            decodedFilesMap[targetZipPath] = cleanedB64;
+                            appendDecodedCard(displayFileName, targetZipPath, cleanedB64, isDuplicate, isMapped, fileType, dimensionLabel);
+
+                            if (isDuplicate) {
+                                appendDecodeLog(`${trimmedMobile} : Duplicate -> Saved as ${displayFileName} [Type: ${fileType.label}, ${dimensionLabel}]`, 'duplicate');
+                            } else if (isMapped) {
+                                appendDecodeLog(`${trimmedMobile} : Mapped -> ${targetZipPath} [Type: ${fileType.label}, ${dimensionLabel}]`, 'success');
+                                decodeStats.success++;
+                            } else {
+                                appendDecodeLog(`${trimmedMobile} : Done [Type: ${fileType.label}, ${dimensionLabel}]`, 'success');
+                                decodeStats.success++;
+                            }
+                        } catch(err) {
+                            appendDecodeLog(`${trimmedMobile} : Decode Fails (${err.message})`, 'error');
+                            decodeStats.error++;
+                        }
+                    }
+                }
+
+                // Reset สำหรับ record ถัดไป
+                mobileNo = ""; eAppAccum = ""; currentField = "";
+                updateDecodeStatsUI();
+            };
+
+            // Loop ทีละบรรทัดจากข้อมูลที่เก็บไว้
+            for (let i = 0; i < currentDecodeLines.length; i++) {
+                let trim = currentDecodeLines[i].trim();
+                if (!trim) continue;
+
+                if (trim === '--------------------') {
+                    flushEntry();
+                    continue;
+                }
+
+                // Match หา mobileNo
+                let mobileMatch = trim.match(/^mobile\s*No\s*:\s*(.+)$/i);
+                if (mobileMatch) {
+                    if (mobileNo || eAppAccum) { flushEntry(); }
+                    mobileNo = mobileMatch[1].trim();
+                    currentField = "";
+                    continue;
+                }
+
+                // Match หาจุดเริ่มต้น eApp
+                let eAppMatch = trim.match(/^eApp\s*:\s*(.*)$/i);
+                if (eAppMatch) {
+                    currentField = "eApp";
+                    if (eAppMatch[1]) { eAppAccum += eAppMatch[1].trim(); }
+                    continue;
+                }
+
+                // บรรทัดต่อเนื่องสำหรับ eApp
+                if (currentField === "eApp") {
+                    eAppAccum += trim;
+                }
+            }
+            flushEntry(); // สำหรับตัวสุดท้าย
+
+            // รายงานผลสรุป
+            appendDecodeLog("========================================", 'title');
+            appendDecodeLog("         FINAL SUMMARY REPORT", 'title');
+            appendDecodeLog("========================================", 'title');
+            appendDecodeLog(`Total Processed : ${decodeStats.total}`);
+            appendDecodeLog(`Success : ${decodeStats.success}`, 'success');
+            appendDecodeLog(`Duplicate Found : ${decodeStats.duplicate}`, 'duplicate');
+            appendDecodeLog(`Errors : ${decodeStats.error}`, 'error');
+
+            if (decodeStats.success > 0 || decodeStats.duplicate > 0) {
+                btnDownloadZip.removeAttribute('disabled');
+                btnDownloadZip.className = "w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-brand-500/20";
+            }
+        }
+
+        // นำการ์ดรูปภาพใส่เข้ามาใน Gallery พร้อม Tooltip แสดง Path (ใช้ร่วมกันทั้ง Tab Decode และ Tab Paste Base64)
+        function appendDecodedCard(displayFileName, fullPath, base64, isDuplicate, isMapped, fileType, dimensionLabel, targetGallery) {
+            targetGallery = targetGallery || imageGallery;
+            if (targetGallery.querySelector('.col-span-full')) {
+                targetGallery.innerHTML = '';
+            }
+
+            fileType = fileType || { ext: 'jpg', mime: 'image/jpeg', label: 'JPG' };
+            dimensionLabel = dimensionLabel || 'N/A';
+            const dataUrl = `data:${fileType.mime};base64,${base64}`;
+            const isPreviewable = fileType.mime.startsWith('image/') && fileType.ext !== 'tiff'; // เบราว์เซอร์ทั่วไปแสดงพรีวิว TIFF ไม่ได้
+
+            const card = document.createElement('div');
+            card.className = `group bg-slate-950/40 border ${isDuplicate ? 'border-amber-500/50 hover:border-amber-400' : 'border-slate-800 hover:border-slate-700'} p-3 rounded-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30 flex flex-col justify-between relative`;
+            card.title = `${fullPath}\nDetected type: ${fileType.label}\nDimension: ${dimensionLabel}`; // Tooltip เมื่อนำเมาส์ไปชี้
+
+            const imgWrapper = document.createElement('div');
+            imgWrapper.className = "w-full aspect-square bg-slate-950 rounded-lg overflow-hidden flex items-center justify-center relative mb-2.5";
+
+            const dimBadge = document.createElement('span');
+            dimBadge.className = "absolute bottom-2 left-2 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-950/90 text-slate-300 border border-slate-700 tracking-wide";
+            dimBadge.textContent = dimensionLabel;
+
+            if (isPreviewable) {
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.className = "w-full h-full object-contain group-hover:scale-105 transition-transform duration-200";
+                img.loading = "lazy";
+                imgWrapper.appendChild(img);
+
+                // ถ้า Header ไม่สามารถอ่าน Dimension ได้ ให้ fallback ไปใช้ค่าจากตัวไฟล์ที่ Browser โหลดจริง
+                if (dimensionLabel === 'N/A') {
+                    img.addEventListener('load', function() {
+                        if (img.naturalWidth && img.naturalHeight) {
+                            dimBadge.textContent = `${img.naturalWidth}x${img.naturalHeight}px`;
+                            card.title = `${fullPath}\nDetected type: ${fileType.label}\nDimension: ${img.naturalWidth}x${img.naturalHeight}px`;
+                        }
+                    });
+                }
+            } else {
+                const placeholder = document.createElement('div');
+                placeholder.className = "flex flex-col items-center justify-center text-slate-500 gap-2";
+                placeholder.innerHTML = `<i class="fa-solid fa-file text-3xl"></i><span class="text-[10px] uppercase tracking-wide">${fileType.label}</span>`;
+                imgWrapper.appendChild(placeholder);
+            }
+
+            imgWrapper.appendChild(dimBadge);
+
+            // Badge แสดงชนิดไฟล์ที่ตรวจพบ (มุมซ้ายบน)
+            const typeBadge = document.createElement('span');
+            typeBadge.className = "absolute top-2 left-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-950/90 text-cyan-400 border border-slate-700 uppercase tracking-wide";
+            typeBadge.textContent = fileType.ext;
+            imgWrapper.appendChild(typeBadge);
+
+            // Badges Tag Indicator
+            if (isDuplicate) {
+                const badge = document.createElement('span');
+                badge.className = "absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/90 text-slate-950 uppercase tracking-wide";
+                badge.textContent = "Dup";
+                imgWrapper.appendChild(badge);
+            } else if (isMapped) {
+                const badge = document.createElement('span');
+                badge.className = "absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-brand-500/90 text-white uppercase tracking-wide";
+                badge.textContent = "Mapped";
+                imgWrapper.appendChild(badge);
+            }
+
+            const footer = document.createElement('div');
+            footer.className = "space-y-1";
+
+            const nameText = document.createElement('div');
+            nameText.className = "text-xs font-semibold text-slate-300 truncate";
+            nameText.textContent = displayFileName;
+
+            const typeText = document.createElement('div');
+            typeText.className = "text-[10px] text-slate-500";
+            typeText.textContent = `Type: ${fileType.label} · ${dimensionLabel}`;
+
+            const actionBtn = document.createElement('button');
+            actionBtn.className = "w-full mt-2 py-1.5 text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg flex items-center justify-center gap-1 transition-all";
+            actionBtn.innerHTML = '<i class="fa-solid fa-download"></i> Download';
+            actionBtn.onclick = function() {
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                // เวลาโหลดทีละไฟล์ จะใช้แค่ชื่อไฟล์สุดท้าย เนื่องจากเว็บบราวเซอร์เซฟ folder structure ตรงๆไม่ได้
+                link.download = displayFileName; 
+                link.click();
+            };
+
+            footer.appendChild(nameText);
+            footer.appendChild(typeText);
+            card.appendChild(imgWrapper);
+            card.appendChild(footer);
+            card.appendChild(actionBtn);
+
+            targetGallery.appendChild(card);
+        }
+
+        // โหลด Zip ของ Decode (จะรักษา Path ตาม Mapping เอาไว้ได้สมบูรณ์)
+        function downloadDecodeZip() {
+            btnDownloadZip.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Generating ZIP File...';
+            btnDownloadZip.disabled = true;
+
+            decodeZip.generateAsync({type:"blob"}).then(function(content) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `eApp_Images_${Date.now()}.zip`;
+                link.click();
+                
+                btnDownloadZip.innerHTML = '<i class="fa-solid fa-file-zipper"></i> Download All (ZIP)';
+                btnDownloadZip.removeAttribute('disabled');
+            });
+        }
+
+
+        // ==================== TAB 2: BATCH RENAME FILE ENGINE ====================
+        const renameFilesInput = document.getElementById('renameFilesInput');
+        const mappingText = document.getElementById('mappingText');
+        const renameTableBody = document.getElementById('renameTableBody');
+        const btnDownloadRenameZip = document.getElementById('btnDownloadRenameZip');
+
+        renameFilesInput.addEventListener('change', function(e) {
+            selectedRenameFiles = Array.from(e.target.files);
+            renderRenameTable();
+        });
+
+        function renderRenameTable() {
+            renameTableBody.innerHTML = '';
+            btnDownloadRenameZip.disabled = true;
+            btnDownloadRenameZip.className = "px-5 py-2.5 bg-slate-800 text-slate-500 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-not-allowed";
+
+            if (selectedRenameFiles.length === 0) {
+                renameTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-12 text-center text-slate-500">
+                            <i class="fa-solid fa-file-signature text-3xl mb-2 block opacity-30"></i>
+                            ยังไม่ได้อัปโหลดไฟล์ต้นฉบับเพื่อแปลงชื่อ
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            selectedRenameFiles.forEach((file, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/50 transition-colors";
+
+                const tdIndex = document.createElement('td');
+                tdIndex.className = "py-3 px-4 font-mono text-slate-500 text-xs";
+                tdIndex.textContent = index + 1;
+
+                const tdOrig = document.createElement('td');
+                tdOrig.className = "py-3 px-4 font-medium text-slate-300 truncate max-w-[240px]";
+                tdOrig.textContent = file.name;
+                tdOrig.title = file.name;
+
+                const tdTarget = document.createElement('td');
+                tdTarget.id = `target-name-${index}`;
+                tdTarget.className = "py-3 px-4 font-mono text-xs text-slate-500 italic";
+                tdTarget.textContent = "(รอการจับคู่กับ Mapping)";
+
+                const tdStatus = document.createElement('td');
+                tdStatus.id = `status-badge-${index}`;
+                tdStatus.className = "py-3 px-4 text-center";
+                tdStatus.innerHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400">Ready</span>`;
+
+                tr.appendChild(tdIndex);
+                tr.appendChild(tdOrig);
+                tr.appendChild(tdTarget);
+                tr.appendChild(tdStatus);
+
+                renameTableBody.appendChild(tr);
+            });
+        }
+
+        function processRenameMapping() {
+            if (selectedRenameFiles.length === 0) {
+                alert("กรุณาเลือกหรืออัปโหลดไฟล์ต้นฉบับก่อนครับ");
+                return;
+            }
+
+            const rawMapText = mappingText.value;
+            if (!rawMapText.trim()) {
+                alert("กรุณาใส่ข้อมูล Mapping ในกล่องข้อความก่อนวิเคราะห์ครับ");
+                return;
+            }
+
+            const mapObj = {};
+            const lines = rawMapText.split('\n');
+            
+            lines.forEach(line => {
+                const cleanLine = line.trim();
+                if (!cleanLine) return;
+
+                const parts = cleanLine.split('=');
+                if (parts.length >= 2) {
+                    let key = parts[0].trim().replace(/^['"]|['"]$/g, '');
+                    let value = parts.slice(1).join('=').trim().replace(/^['"]|['"]$/g, '');
+                    if (key && value) {
+                        mapObj[key] = value;
+                    }
+                }
+            });
+
+            renamedMappingResults = [];
+            let matchedCount = 0;
+
+            selectedRenameFiles.forEach((file, index) => {
+                const origName = file.name;
+                const mappedName = mapObj[origName];
+
+                const targetEl = document.getElementById(`target-name-${index}`);
+                const statusEl = document.getElementById(`status-badge-${index}`);
+
+                if (mappedName) {
+                    targetEl.textContent = mappedName;
+                    targetEl.className = "py-3 px-4 font-mono text-xs text-emerald-400 font-semibold";
+                    statusEl.innerHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-circle-check mr-1 text-[10px]"></i> Matched</span>`;
+                    
+                    renamedMappingResults.push({
+                        originalName: origName,
+                        targetName: mappedName,
+                        fileRef: file,
+                        isMatched: true
+                    });
+                    matchedCount++;
+                } else {
+                    targetEl.textContent = "(ไม่พบข้อมูลใน Mapping คัดลอกโดยใช้ชื่อเดิม)";
+                    targetEl.className = "py-3 px-4 font-mono text-xs text-slate-500 italic";
+                    statusEl.innerHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20"><i class="fa-solid fa-circle-exclamation mr-1 text-[10px]"></i> Keep Original</span>`;
+                    
+                    renamedMappingResults.push({
+                        originalName: origName,
+                        targetName: origName,
+                        fileRef: file,
+                        isMatched: false
+                    });
+                }
+            });
+
+            if (renamedMappingResults.length > 0) {
+                btnDownloadRenameZip.removeAttribute('disabled');
+                btnDownloadRenameZip.className = "px-5 py-2.5 bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-sm font-semibold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-brand-500/20";
+                alert(`วิเคราะห์ Mapping เสร็จสิ้น จับคู่สำเร็จ ${matchedCount} จากทั้งหมด ${selectedRenameFiles.length} ไฟล์ พร้อมส่งออกในรูปของ ZIP !`);
+            }
+        }
+
+        function downloadRenameZip() {
+            if (renamedMappingResults.length === 0) return;
+
+            btnDownloadRenameZip.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Zipping files...';
+            btnDownloadRenameZip.disabled = true;
+
+            const renameZip = new JSZip();
+            const promises = [];
+
+            renamedMappingResults.forEach(item => {
+                const promise = new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        let targetPath = item.targetName.startsWith('/') ? item.targetName.substring(1) : item.targetName;
+                        renameZip.file(targetPath, e.target.result);
+                        resolve();
+                    };
+                    reader.readAsArrayBuffer(item.fileRef);
+                });
+                promises.push(promise);
+            });
+
+            Promise.all(promises).then(() => {
+                renameZip.generateAsync({type:"blob"}).then(function(content) {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(content);
+                    link.download = `Batch_Renamed_Files_${Date.now()}.zip`;
+                    link.click();
+                    
+                    btnDownloadRenameZip.innerHTML = '<i class="fa-solid fa-file-zipper"></i> Download Renamed Files (ZIP)';
+                    btnDownloadRenameZip.disabled = false;
+                });
+            });
+        }
+
+
+        // ==================== TAB 3: ENCODE IMAGE TO BASE64 ENGINE ====================
+        const encodeFilesInput = document.getElementById('encodeFilesInput');
+        const encodeDropzoneLabel = document.getElementById('encodeDropzoneLabel');
+        const btnConvertEncode = document.getElementById('btnConvertEncode');
+        const btnCopyAllEncode = document.getElementById('btnCopyAllEncode');
+        const btnDownloadEncodeTxt = document.getElementById('btnDownloadEncodeTxt');
+        const encodeResultsList = document.getElementById('encodeResultsList');
+        const encodeResultCount = document.getElementById('encodeResultCount');
+
+        let selectedEncodeFiles = [];
+        let encodeResults = []; // { name, base64, mime, ext, typeLabel, sizeLabel, dimensionLabel, error? }
+
+        encodeFilesInput.addEventListener('change', function(e) {
+            selectedEncodeFiles = Array.from(e.target.files);
+
+            encodeDropzoneLabel.textContent = selectedEncodeFiles.length > 0
+                ? `เลือกแล้ว ${selectedEncodeFiles.length} ไฟล์ (คลิกเพื่อเลือกใหม่)`
+                : 'Select multiple images or drag them here';
+
+            if (selectedEncodeFiles.length > 0) {
+                btnConvertEncode.removeAttribute('disabled');
+                btnConvertEncode.className = "px-5 py-2.5 bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-sm font-semibold rounded-xl flex items-center gap-2 transition-all";
+            } else {
+                btnConvertEncode.disabled = true;
+                btnConvertEncode.className = "px-5 py-2.5 bg-slate-800 text-slate-500 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-not-allowed";
+            }
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+        }
+
+        // อ่านไฟล์เป็น Base64 (คืนเฉพาะส่วนข้อมูล ไม่รวม data:...;base64, prefix)
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const result = reader.result;
+                    const commaIdx = result.indexOf(',');
+                    resolve(commaIdx >= 0 ? result.substring(commaIdx + 1) : result);
+                };
+                reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function convertImagesToBase64() {
+            if (selectedEncodeFiles.length === 0) return;
+
+            const originalBtnHtml = '<i class="fa-solid fa-bolt"></i> Convert to Base64';
+            btnConvertEncode.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Converting...';
+            btnConvertEncode.disabled = true;
+
+            encodeResults = [];
+
+            for (const file of selectedEncodeFiles) {
+                try {
+                    const base64 = await readFileAsBase64(file);
+                    // ใช้ Magic Bytes ตรวจชนิดไฟล์จริง (Reuse ฟังก์ชันจาก Tab Decode) แทนการเชื่อ MIME/นามสกุลเดิมของไฟล์เฉยๆ
+                    const fileType = detectFileType(base64);
+
+                    let dimensionLabel = 'N/A';
+                    try {
+                        const bytes = base64ToBytes(base64);
+                        const dims = getImageDimensions(bytes, fileType.ext);
+                        if (dims && dims.width && dims.height) {
+                            dimensionLabel = `${dims.width}x${dims.height}px`;
+                        }
+                    } catch (e) { /* ignore, fallback stays N/A */ }
+
+                    encodeResults.push({
+                        name: file.name,
+                        base64: base64,
+                        mime: fileType.mime,
+                        ext: fileType.ext,
+                        typeLabel: fileType.label,
+                        sizeLabel: formatFileSize(file.size),
+                        dimensionLabel: dimensionLabel
+                    });
+                } catch (err) {
+                    encodeResults.push({
+                        name: file.name,
+                        base64: '',
+                        mime: '',
+                        ext: '',
+                        typeLabel: 'Error',
+                        sizeLabel: formatFileSize(file.size),
+                        dimensionLabel: 'N/A',
+                        error: err.message
+                    });
+                }
+            }
+
+            renderEncodeResults();
+
+            btnConvertEncode.innerHTML = originalBtnHtml;
+            btnConvertEncode.disabled = false;
+
+            const hasResults = encodeResults.some(item => item.base64);
+            if (hasResults) {
+                [btnCopyAllEncode, btnDownloadEncodeTxt].forEach(btn => {
+                    btn.removeAttribute('disabled');
+                    btn.className = "px-5 py-2.5 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-100 text-sm font-semibold rounded-xl flex items-center gap-2 transition-all";
+                });
+            }
+        }
+
+        function renderEncodeResults() {
+            encodeResultCount.textContent = encodeResults.length;
+
+            if (encodeResults.length === 0) {
+                encodeResultsList.innerHTML = `
+                    <div class="py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl">
+                        <i class="fa-solid fa-file-code text-4xl mb-3 block opacity-40"></i>
+                        ยังไม่มีผลลัพธ์ กรุณาอัปโหลดรูปภาพแล้วกด Convert
+                    </div>`;
+                return;
+            }
+
+            encodeResultsList.innerHTML = '';
+
+            encodeResults.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row gap-5";
+
+                // Thumbnail
+                const thumbWrapper = document.createElement('div');
+                thumbWrapper.className = "w-full md:w-40 flex-shrink-0";
+
+                const thumbInner = document.createElement('div');
+                thumbInner.className = "w-full aspect-square bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800 relative";
+
+                if (item.base64 && item.mime && item.mime.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = `data:${item.mime};base64,${item.base64}`;
+                    img.className = "w-full h-full object-contain";
+                    img.loading = "lazy";
+                    thumbInner.appendChild(img);
+
+                    const extBadge = document.createElement('span');
+                    extBadge.className = "absolute top-1.5 left-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-950/90 text-cyan-400 border border-slate-700 uppercase tracking-wide";
+                    extBadge.textContent = item.ext;
+                    thumbInner.appendChild(extBadge);
+                } else {
+                    thumbInner.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-3xl text-rose-400"></i>';
+                }
+                thumbWrapper.appendChild(thumbInner);
+
+                // Info + Textarea
+                const infoWrapper = document.createElement('div');
+                infoWrapper.className = "flex-1 min-w-0 flex flex-col";
+
+                const headerRow = document.createElement('div');
+                headerRow.className = "flex flex-wrap items-start justify-between gap-2 mb-2";
+
+                const nameBlock = document.createElement('div');
+                nameBlock.className = "min-w-0";
+
+                const nameText = document.createElement('div');
+                nameText.className = "text-sm font-semibold text-slate-200 truncate";
+                nameText.textContent = item.name;
+                nameText.title = item.name;
+
+                const metaText = document.createElement('div');
+                metaText.className = item.error ? "text-[11px] text-rose-400 mt-0.5" : "text-[11px] text-slate-500 mt-0.5";
+                metaText.textContent = item.error
+                    ? `Error: ${item.error}`
+                    : `Type: ${item.typeLabel} · ${item.dimensionLabel} · ${item.sizeLabel} · Length: ${item.base64.length.toLocaleString()} chars`;
+
+                nameBlock.appendChild(nameText);
+                nameBlock.appendChild(metaText);
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = "px-3 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg flex items-center gap-1.5 transition-all flex-shrink-0";
+                copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy Base64';
+                copyBtn.disabled = !item.base64;
+                if (!item.base64) copyBtn.classList.add('opacity-40', 'cursor-not-allowed');
+                copyBtn.onclick = function() {
+                    if (item.base64) copyTextToClipboard(item.base64, copyBtn);
+                };
+
+                headerRow.appendChild(nameBlock);
+                headerRow.appendChild(copyBtn);
+
+                const textarea = document.createElement('textarea');
+                textarea.readOnly = true;
+                textarea.className = "w-full flex-1 p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-[11px] font-mono text-slate-400 resize-none min-h-[110px] focus:outline-none focus:border-brand-500";
+                textarea.value = item.base64 || '';
+                textarea.onclick = function() { textarea.select(); };
+
+                infoWrapper.appendChild(headerRow);
+                infoWrapper.appendChild(textarea);
+
+                card.appendChild(thumbWrapper);
+                card.appendChild(infoWrapper);
+
+                encodeResultsList.appendChild(card);
+            });
+        }
+
+        // Copy ข้อความไปยัง Clipboard พร้อมแสดง Feedback ที่ปุ่ม
+        function copyTextToClipboard(text, btnEl) {
+            navigator.clipboard.writeText(text).then(() => {
+                if (btnEl) {
+                    const original = btnEl.innerHTML;
+                    btnEl.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                    setTimeout(() => { btnEl.innerHTML = original; }, 1500);
+                }
+            }).catch(() => {
+                alert('ไม่สามารถ Copy ได้ กรุณาคัดลอกด้วยตนเอง');
+            });
+        }
+
+        // รวม Base64 ทุกไฟล์เป็นรูปแบบ filename=base64 (ใช้วางต่อใน Mapping ของ Tab อื่นได้เลย)
+        function buildCombinedEncodeText() {
+            return encodeResults
+                .filter(item => item.base64)
+                .map(item => `${item.name}=${item.base64}`)
+                .join('\n');
+        }
+
+        function copyAllEncodeResults() {
+            if (encodeResults.length === 0) return;
+            copyTextToClipboard(buildCombinedEncodeText(), btnCopyAllEncode);
+        }
+
+        function downloadEncodeResultsTxt() {
+            if (encodeResults.length === 0) return;
+            const blob = new Blob([buildCombinedEncodeText()], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Base64_Encoded_${Date.now()}.txt`;
+            link.click();
+        }
+
+
+        // ==================== TAB 4: PASTE BASE64 TO IMAGE ENGINE ====================
+        const pasteBase64Input = document.getElementById('pasteBase64Input');
+        const pasteConsole = document.getElementById('pasteConsole');
+        const pasteGallery = document.getElementById('pasteGallery');
+        const pasteGalleryCount = document.getElementById('pasteGalleryCount');
+        const btnDownloadPasteZip = document.getElementById('btnDownloadPasteZip');
+
+        let pasteZip = new JSZip();
+        let pasteStats = { total: 0, success: 0, error: 0 };
+        let pasteUsedNames = new Set(); // กันชื่อไฟล์ซ้ำสะสมข้าม Convert หลายรอบ
+
+        function appendPasteLog(message, type = 'info') {
+            const line = document.createElement('div');
+            let colorClass = 'text-slate-400';
+            let prefix = '> ';
+
+            if (type === 'success') {
+                colorClass = 'text-emerald-400';
+                prefix = '✅ ';
+            } else if (type === 'error') {
+                colorClass = 'text-rose-400';
+                prefix = '❌ ';
+            } else if (type === 'title') {
+                colorClass = 'text-cyan-400 font-bold border-b border-slate-800 pb-1 mt-3';
+                prefix = '';
+            }
+
+            line.className = colorClass;
+            line.textContent = `${prefix}${message}`;
+            pasteConsole.appendChild(line);
+            pasteConsole.scrollTop = pasteConsole.scrollHeight;
+        }
+
+        function clearPasteLogs() {
+            pasteConsole.innerHTML = '<div class="text-slate-500">> Logs cleared. Ready.</div>';
+        }
+
+        function updatePasteStatsUI() {
+            document.getElementById('paste-total').textContent = pasteStats.total;
+            document.getElementById('paste-success').textContent = pasteStats.success;
+            document.getElementById('paste-error').textContent = pasteStats.error;
+            pasteGalleryCount.textContent = pasteUsedNames.size;
+        }
+
+        // แยกแต่ละบรรทัดของ Textarea ออกเป็นรายการ { name, rawBase64 }
+        // รองรับ: "ชื่อไฟล์=base64", "data:image/...;base64,...", หรือ Base64 ดิบๆ (จะตั้งชื่อ pasted_image_N ให้อัตโนมัติ)
+        function parsePasteBase64Input(raw) {
+            const rawLines = raw.split(/\r?\n/);
+            const entries = [];
+
+            rawLines.forEach(line => {
+                let trimmed = line.trim();
+                if (!trimmed) return;
+
+                let name = '';
+                let b64 = trimmed;
+
+                // ตัด data URI prefix ถ้ามี เช่น data:image/png;base64,....
+                const dataUriMatch = b64.match(/^data:([^;]+);base64,(.*)$/i);
+                if (dataUriMatch) {
+                    b64 = dataUriMatch[2];
+                }
+
+                // เช็ครูปแบบ "ชื่อไฟล์=base64" — ชื่อไฟล์ต้องมีอักขระที่ไม่ใช่ Base64 (เช่น จุดของนามสกุลไฟล์)
+                // เพื่อไม่ให้ไปสับสนกับเครื่องหมาย = padding ท้าย Base64 เอง
+                const eqIdx = b64.indexOf('=');
+                if (eqIdx > 0) {
+                    const potentialName = b64.substring(0, eqIdx);
+                    const potentialValue = b64.substring(eqIdx + 1).replace(/\s/g, '');
+                    const looksLikeName = /[^A-Za-z0-9+/=]/.test(potentialName) || potentialName.includes('.');
+                    const looksLikeBase64Value = /^[A-Za-z0-9+/]+=*$/.test(potentialValue);
+                    if (looksLikeName && looksLikeBase64Value && potentialValue.length > 20) {
+                        name = potentialName;
+                        b64 = potentialValue;
+                    }
+                }
+
+                b64 = b64.replace(/\s/g, '');
+                if (!b64) return;
+
+                entries.push({ name: name, rawBase64: b64 });
+            });
+
+            return entries;
+        }
+
+        function convertPastedBase64() {
+            const raw = pasteBase64Input.value;
+            if (!raw || !raw.trim()) {
+                alert('กรุณาวางข้อมูล Base64 ก่อนแปลงครับ');
+                return;
+            }
+
+            const entries = parsePasteBase64Input(raw);
+            if (entries.length === 0) {
+                alert('ไม่พบข้อมูล Base64 ที่ถูกต้องในข้อความที่วางมา');
+                return;
+            }
+
+            appendPasteLog(`Processing ${entries.length} pasted item(s)...`, 'title');
+
+            entries.forEach((entry, idx) => {
+                pasteStats.total++;
+                const autoName = `pasted_image_${pasteStats.total}`;
+                const cleaned = cleanBase64(entry.rawBase64);
+
+                if (!cleaned) {
+                    appendPasteLog(`${entry.name || autoName} : Fail (Base64 ว่างเปล่าหรือไม่ถูกต้อง)`, 'error');
+                    pasteStats.error++;
+                    updatePasteStatsUI();
+                    return;
+                }
+
+                let fileType;
+                try {
+                    fileType = detectFileType(cleaned);
+                } catch (e) {
+                    fileType = { ext: 'jpg', mime: 'image/jpeg', label: 'JPG (default)' };
+                }
+
+                let dimensionLabel = 'N/A';
+                try {
+                    const bytes = base64ToBytes(cleaned);
+                    const dims = getImageDimensions(bytes, fileType.ext);
+                    if (dims && dims.width && dims.height) {
+                        dimensionLabel = `${dims.width}x${dims.height}px`;
+                    }
+                } catch (e) { /* ignore, fallback stays N/A -> img.onload จะเติมให้ทีหลัง */ }
+
+                // ตั้งชื่อไฟล์ปลายทาง (เติมนามสกุลให้ถ้าชื่อที่ให้มายังไม่มีนามสกุล)
+                let baseName = entry.name || autoName;
+                let fileName = /\.[a-zA-Z0-9]+$/.test(baseName) ? baseName : `${baseName}.${fileType.ext}`;
+
+                // กันชื่อไฟล์ซ้ำ (สะสมข้ามการ Convert หลายรอบ)
+                let finalName = fileName;
+                let dupCount = 1;
+                while (pasteUsedNames.has(finalName)) {
+                    const dotIdx = fileName.lastIndexOf('.');
+                    finalName = dotIdx > -1
+                        ? `${fileName.substring(0, dotIdx)}_dup${dupCount}${fileName.substring(dotIdx)}`
+                        : `${fileName}_dup${dupCount}`;
+                    dupCount++;
+                }
+                const isDuplicate = finalName !== fileName;
+                pasteUsedNames.add(finalName);
+
+                try {
+                    pasteZip.file(finalName, cleaned, { base64: true });
+                    appendDecodedCard(finalName, finalName, cleaned, isDuplicate, false, fileType, dimensionLabel, pasteGallery);
+                    appendPasteLog(`${finalName} : Done [Type: ${fileType.label}, ${dimensionLabel}]`, 'success');
+                    pasteStats.success++;
+                } catch (err) {
+                    appendPasteLog(`${baseName} : Fail (${err.message})`, 'error');
+                    pasteStats.error++;
+                }
+
+                updatePasteStatsUI();
+            });
+
+            if (pasteStats.success > 0) {
+                btnDownloadPasteZip.removeAttribute('disabled');
+                btnDownloadPasteZip.className = "w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-brand-500/20";
+            }
+
+            // เคลียร์กล่องข้อความหลัง Convert สำเร็จ เพื่อให้วางชุดถัดไปต่อได้ทันที
+            pasteBase64Input.value = '';
+        }
+
+        function clearPasteAll() {
+            pasteZip = new JSZip();
+            pasteStats = { total: 0, success: 0, error: 0 };
+            pasteUsedNames.clear();
+            pasteGallery.innerHTML = `
+                <div class="col-span-full py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl">
+                    <i class="fa-regular fa-image text-4xl mb-3 block opacity-40"></i>
+                    ยังไม่มีรูปภาพที่แปลงจาก Base64 ในขณะนี้
+                </div>`;
+            pasteBase64Input.value = '';
+            clearPasteLogs();
+            updatePasteStatsUI();
+
+            btnDownloadPasteZip.disabled = true;
+            btnDownloadPasteZip.className = "w-full py-3.5 px-4 bg-slate-800 text-slate-400 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-not-allowed";
+        }
+
+        function downloadPasteZip() {
+            if (pasteStats.success === 0) return;
+
+            btnDownloadPasteZip.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Generating ZIP File...';
+            btnDownloadPasteZip.disabled = true;
+
+            pasteZip.generateAsync({ type: "blob" }).then(function(content) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `Pasted_Base64_Images_${Date.now()}.zip`;
+                link.click();
+
+                btnDownloadPasteZip.innerHTML = '<i class="fa-solid fa-file-zipper"></i> Download All (ZIP)';
+                btnDownloadPasteZip.removeAttribute('disabled');
+            });
+        }
+    </script>
+</body>
+</html>
