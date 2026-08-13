@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- JSZip for zipping files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- PDF.js for PDF -> Image conversion -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -236,6 +238,31 @@
     <!-- Toast Notification Container -->
     <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
+    <!-- Lightbox / Image Preview Overlay -->
+    <div id="lightboxOverlay" class="hidden fixed inset-0 z-[9998] bg-slate-950/92 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8" onclick="if(event.target===this) closeLightbox()">
+        <button onclick="closeLightbox()" aria-label="Close preview" class="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all z-10">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
+        <button id="lightboxPrevBtn" onclick="event.stopPropagation(); lightboxPrev()" aria-label="Previous image" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-slate-900/80 hover:bg-brand-600 border border-slate-700 hover:border-brand-500 text-slate-300 hover:text-white flex items-center justify-center transition-all z-10">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button id="lightboxNextBtn" onclick="event.stopPropagation(); lightboxNext()" aria-label="Next image" class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-slate-900/80 hover:bg-brand-600 border border-slate-700 hover:border-brand-500 text-slate-300 hover:text-white flex items-center justify-center transition-all z-10">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <div class="max-w-full max-h-full flex flex-col items-center gap-4" onclick="event.stopPropagation()">
+            <img id="lightboxImg" src="" alt="" class="max-w-[90vw] max-h-[70vh] sm:max-h-[75vh] object-contain rounded-lg shadow-2xl border border-slate-800">
+            <div class="flex items-center gap-4 bg-slate-900/80 border border-slate-800 rounded-full px-5 py-2.5 max-w-[92vw]">
+                <span id="lightboxName" class="text-xs sm:text-sm font-medium text-slate-200 truncate max-w-[40vw]"></span>
+                <span id="lightboxCounter" class="text-[11px] readout text-slate-500 flex-shrink-0"></span>
+                <button onclick="lightboxDownload()" class="flex-shrink-0 px-3 py-1.5 text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white rounded-full flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-download"></i> Download
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Status LED Strip -->
     <div class="h-[3px] w-full bg-gradient-to-r from-brand-500 via-amber-400 to-brand-500 bg-[length:200%_100%] animate-[ledsweep_6s_linear_infinite]"></div>
 
@@ -256,7 +283,7 @@
             </div>
             
             <!-- Tab Controls -->
-            <div class="flex bg-slate-950/60 p-1 rounded-md border border-slate-800 gap-0.5">
+            <div class="flex bg-slate-950/60 p-1 rounded-md border border-slate-800 gap-0.5 flex-wrap">
                 <button onclick="switchTab('decode-tab')" id="btn-decode-tab" class="tab-btn px-5 py-2 rounded-sm text-xs font-semibold uppercase tracking-wide transition-all duration-200 bg-brand-600 text-white shadow-md">
                     <i class="fa-solid fa-file-code mr-2"></i>Base64 → eApplication
                 </button>
@@ -271,6 +298,9 @@
                 </button>
                 <button onclick="switchTab('decodesim-tab')" id="btn-decodesim-tab" class="tab-btn px-5 py-2 rounded-sm text-xs font-semibold uppercase tracking-wide transition-all duration-200 text-slate-400 hover:text-slate-200">
                     <i class="fa-solid fa-sim-card mr-2"></i>Base64 → Image (ChgSIM)
+                </button>
+                <button onclick="switchTab('pdf-tab')" id="btn-pdf-tab" class="tab-btn px-5 py-2 rounded-sm text-xs font-semibold uppercase tracking-wide transition-all duration-200 text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-file-pdf mr-2"></i>PDF → Image
                 </button>
             </div>
         </div>
@@ -663,6 +693,117 @@
             </div>
         </div>
 
+        <!-- ==================== TAB 6: PDF -> IMAGE ==================== -->
+        <div id="pdf-tab" class="tab-content space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Dropzone + Options (3 Col) -->
+                <div class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-lg panel-marks p-6 flex flex-col">
+                    <h2 class="text-lg font-semibold text-slate-200 mb-2">Import PDF</h2>
+                    <p class="text-xs text-slate-400 mb-4">อัปโหลด PDF ได้หลายไฟล์พร้อมกัน ระบบจะแปลงทุกหน้าในไฟล์เป็นรูปภาพให้อัตโนมัติ</p>
+
+                    <!-- Multiple Files Dropzone -->
+                    <div class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-md p-10 text-center cursor-pointer bg-slate-950/40 relative group">
+                        <input type="file" id="pdfFilesInput" accept="application/pdf,.pdf" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <div class="space-y-3 pointer-events-none">
+                            <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400 group-hover:text-brand-500 group-hover:bg-slate-800/80 transition-colors">
+                                <i class="fa-solid fa-file-pdf text-xl"></i>
+                            </div>
+                            <div class="text-slate-300 font-medium" id="pdfDropzoneLabel">Select one or more PDF files or drag them here</div>
+                            <div class="text-xs text-slate-500">.pdf format only</div>
+                        </div>
+                    </div>
+
+                    <!-- Options Row -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 uppercase tracking-wider mb-1.5">Output Format</label>
+                            <select id="pdfOutputFormat" class="w-full p-2.5 bg-slate-950/80 border border-slate-800 rounded-md text-sm text-slate-300 focus:outline-none focus:border-brand-500">
+                                <option value="png">PNG (คมชัด/ไม่มี Loss)</option>
+                                <option value="jpeg">JPG (ไฟล์เล็กกว่า)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 uppercase tracking-wider mb-1.5">Quality / Scale</label>
+                            <select id="pdfScale" class="w-full p-2.5 bg-slate-950/80 border border-slate-800 rounded-md text-sm text-slate-300 focus:outline-none focus:border-brand-500">
+                                <option value="1">Low (1x)</option>
+                                <option value="1.5">Medium (1.5x)</option>
+                                <option value="2" selected>High (2x)</option>
+                                <option value="3">Very High (3x)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="convertPdfToImages()" id="btnConvertPdf" disabled class="w-full py-2.5 px-4 bg-slate-800 text-slate-500 rounded-md text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-not-allowed">
+                                <i class="fa-solid fa-bolt"></i>
+                                Convert to Image
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Panel (1 Col) -->
+                <div class="bg-slate-900 border border-slate-800 rounded-lg panel-marks p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-200 mb-4">Processing Stats</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-md p-3 text-center">
+                                <div class="text-[10px] text-slate-400 uppercase tracking-wider">Files</div>
+                                <div id="pdf-files" class="text-xl font-bold text-slate-200 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-md p-3 text-center">
+                                <div class="text-[10px] text-slate-400 uppercase tracking-wider">Pages</div>
+                                <div id="pdf-total" class="text-xl font-bold text-slate-200 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-md p-3 text-center">
+                                <div class="text-[10px] text-emerald-400 uppercase tracking-wider">Success</div>
+                                <div id="pdf-success" class="text-xl font-bold text-emerald-400 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-md p-3 text-center">
+                                <div class="text-[10px] text-rose-400 uppercase tracking-wider">Error</div>
+                                <div id="pdf-error" class="text-xl font-bold text-rose-400 mt-1">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="mt-6">
+                        <button id="btnDownloadPdfZip" onclick="downloadPdfZip()" disabled class="w-full py-3.5 px-4 bg-slate-800 text-slate-400 rounded-md font-semibold flex items-center justify-center gap-2 transition-all cursor-not-allowed">
+                            <i class="fa-solid fa-file-zipper"></i>
+                            <span>Download All (ZIP)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Console Log Panel -->
+            <div class="bg-slate-900 border border-slate-800 rounded-lg panel-marks p-5 overflow-hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></span> Terminal Logs
+                    </span>
+                    <button onclick="clearPdfLogs()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                        Clear Logs
+                    </button>
+                </div>
+                <div id="pdfConsole" class="h-44 bg-black/55 rounded-md p-4 font-mono text-xs overflow-y-auto space-y-1.5 border border-slate-950/85">
+                    <div class="text-slate-500">> System initialized. Awaiting PDF import...</div>
+                </div>
+            </div>
+
+            <!-- Image Results Grid -->
+            <div>
+                <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-images text-brand-500"></i>
+                    Converted Page Previews (<span id="pdfGalleryCount">0</span>)
+                </h3>
+                <div id="pdfGallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div class="col-span-full py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-lg">
+                        <i class="fa-regular fa-file-pdf text-4xl mb-3 block opacity-40"></i>
+                        ยังไม่มีรูปภาพที่แปลงจาก PDF ในขณะนี้
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- Footer -->
@@ -672,6 +813,11 @@
 
 
     <script>
+        // ตั้งค่า Worker ของ PDF.js (จำเป็นสำหรับการ Render PDF)
+        if (window['pdfjsLib']) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
         // ==================== GLOBAL APP STATE ====================
         let currentTab = 'decode-tab';
         
@@ -685,6 +831,79 @@
         // 2. Rename File State
         let selectedRenameFiles = []; 
         let renamedMappingResults = [];
+
+        // ==================== LIGHTBOX / IMAGE PREVIEW ENGINE ====================
+        // เก็บรายการรูปของแต่ละ Gallery แยกตาม id เพื่อให้ Next/Prev วนอยู่ในชุดรูปเดียวกัน
+        const galleryItemsStore = {};
+        let lightboxState = { galleryId: null, index: 0 };
+
+        function resetGalleryItems(galleryId) {
+            galleryItemsStore[galleryId] = [];
+        }
+
+        function pushGalleryItem(galleryId, item) {
+            if (!galleryItemsStore[galleryId]) galleryItemsStore[galleryId] = [];
+            galleryItemsStore[galleryId].push(item);
+            return galleryItemsStore[galleryId].length - 1; // คืน index ของรูปที่เพิ่งเพิ่ม
+        }
+
+        function openLightbox(galleryId, index) {
+            const items = galleryItemsStore[galleryId] || [];
+            if (items.length === 0) return;
+            lightboxState = { galleryId, index };
+            renderLightbox();
+            document.getElementById('lightboxOverlay').classList.remove('hidden');
+            document.addEventListener('keydown', lightboxKeyHandler);
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightboxOverlay').classList.add('hidden');
+            document.removeEventListener('keydown', lightboxKeyHandler);
+        }
+
+        function lightboxKeyHandler(e) {
+            if (e.key === 'Escape') closeLightbox();
+            else if (e.key === 'ArrowRight') lightboxNext();
+            else if (e.key === 'ArrowLeft') lightboxPrev();
+        }
+
+        function renderLightbox() {
+            const items = galleryItemsStore[lightboxState.galleryId] || [];
+            if (items.length === 0) { closeLightbox(); return; }
+
+            if (lightboxState.index < 0) lightboxState.index = items.length - 1;
+            if (lightboxState.index >= items.length) lightboxState.index = 0;
+
+            const item = items[lightboxState.index];
+            document.getElementById('lightboxImg').src = item.dataUrl;
+            document.getElementById('lightboxImg').alt = item.name;
+            document.getElementById('lightboxName').textContent = item.name;
+            document.getElementById('lightboxCounter').textContent = `${lightboxState.index + 1} / ${items.length}`;
+
+            const showNav = items.length > 1;
+            document.getElementById('lightboxPrevBtn').classList.toggle('hidden', !showNav);
+            document.getElementById('lightboxNextBtn').classList.toggle('hidden', !showNav);
+        }
+
+        function lightboxNext() {
+            lightboxState.index++;
+            renderLightbox();
+        }
+
+        function lightboxPrev() {
+            lightboxState.index--;
+            renderLightbox();
+        }
+
+        function lightboxDownload() {
+            const items = galleryItemsStore[lightboxState.galleryId] || [];
+            const item = items[lightboxState.index];
+            if (!item) return;
+            const link = document.createElement('a');
+            link.href = item.dataUrl;
+            link.download = item.name;
+            link.click();
+        }
 
         // ==================== TOAST NOTIFICATION ENGINE ====================
         const TOAST_CONFIG = {
@@ -963,6 +1182,7 @@
             decodeStats = { total: 0, success: 0, duplicate: 0, error: 0 };
             decodedFileNames.clear();
             decodedFilesMap = {};
+            resetGalleryItems('imageGallery');
             
             imageGallery.innerHTML = '';
             clearDecodeLogs();
@@ -1168,6 +1388,14 @@
                         }
                     });
                 }
+
+                // ลงทะเบียนรูปไว้ใน Gallery Store แล้วเปิด Lightbox เมื่อคลิกที่รูป (ดูก่อน Download ได้ และเลื่อนดูรูปถัดไป/ก่อนหน้าได้)
+                const galleryId = targetGallery.id;
+                const itemIndex = pushGalleryItem(galleryId, { name: displayFileName, dataUrl: dataUrl });
+                imgWrapper.classList.add('cursor-pointer');
+                imgWrapper.addEventListener('click', function() {
+                    openLightbox(galleryId, itemIndex);
+                });
             } else {
                 const placeholder = document.createElement('div');
                 placeholder.className = "flex flex-col items-center justify-center text-slate-500 gap-2";
@@ -1534,6 +1762,7 @@
             }
 
             encodeResultsList.innerHTML = '';
+            resetGalleryItems('encodeResultsList');
 
             encodeResults.forEach((item) => {
                 const card = document.createElement('div');
@@ -1548,7 +1777,8 @@
 
                 if (item.base64 && item.mime && item.mime.startsWith('image/')) {
                     const img = document.createElement('img');
-                    img.src = `data:${item.mime};base64,${item.base64}`;
+                    const itemDataUrl = `data:${item.mime};base64,${item.base64}`;
+                    img.src = itemDataUrl;
                     img.className = "w-full h-full object-contain";
                     img.loading = "lazy";
                     thumbInner.appendChild(img);
@@ -1557,6 +1787,13 @@
                     extBadge.className = "absolute top-1.5 left-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-950/90 text-cyan-400 border border-slate-700 uppercase tracking-wide";
                     extBadge.textContent = item.ext;
                     thumbInner.appendChild(extBadge);
+
+                    // เปิด Lightbox ดูรูปก่อนได้ (เลื่อนดูรูปถัดไป/ก่อนหน้าในชุดผลลัพธ์เดียวกันได้)
+                    const itemIndex = pushGalleryItem('encodeResultsList', { name: item.name, dataUrl: itemDataUrl });
+                    thumbInner.classList.add('cursor-pointer');
+                    thumbInner.addEventListener('click', function() {
+                        openLightbox('encodeResultsList', itemIndex);
+                    });
                 } else {
                     thumbInner.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-3xl text-rose-400"></i>';
                 }
@@ -1822,6 +2059,7 @@
             pasteZip = new JSZip();
             pasteStats = { total: 0, success: 0, error: 0 };
             pasteUsedNames.clear();
+            resetGalleryItems('pasteGallery');
             pasteGallery.innerHTML = `
                 <div class="col-span-full py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-lg">
                     <i class="fa-regular fa-image text-4xl mb-3 block opacity-40"></i>
@@ -1998,6 +2236,7 @@
             imageGrid.innerHTML = '';
             outputSection.classList.remove('hidden');
             imgCount.textContent = simExtractedImages.length;
+            resetGalleryItems('simImageGrid');
 
             downloadAllBtn.classList.toggle('hidden', simExtractedImages.length <= 1);
 
@@ -2012,14 +2251,16 @@
                 imgData.url = blobUrl;
                 imgData.fileName = fileName;
 
+                const itemIndex = pushGalleryItem('simImageGrid', { name: fileName, dataUrl: blobUrl });
+
                 const card = document.createElement('div');
                 card.className = 'bg-slate-900 border border-slate-800 rounded-lg overflow-hidden flex flex-col group';
 
                 card.innerHTML = `
-                    <div class="w-full aspect-square bg-slate-950/80 flex items-center justify-center p-3 relative">
+                    <div class="w-full aspect-square bg-slate-950/80 flex items-center justify-center p-3 relative cursor-pointer" onclick="openLightbox('simImageGrid', ${itemIndex})">
                         <img src="${blobUrl}" class="max-w-full max-h-full object-contain rounded drop-shadow-lg" alt="${fileName}">
                         <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-                            <a href="${blobUrl}" download="${fileName}" class="bg-brand-600 hover:bg-brand-500 text-white p-3 rounded-full transform scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg">
+                            <a href="${blobUrl}" download="${fileName}" onclick="event.stopPropagation()" class="bg-brand-600 hover:bg-brand-500 text-white p-3 rounded-full transform scale-75 group-hover:scale-100 transition-all duration-300 shadow-lg">
                                 <i class="fa-solid fa-download"></i>
                             </a>
                         </div>
@@ -2046,6 +2287,7 @@
             document.getElementById('simImgCount').textContent = '0';
             document.getElementById('simDownloadAllBtn').classList.add('hidden');
             simExtractedImages = [];
+            resetGalleryItems('simImageGrid');
         }
 
         // ดาวน์โหลดทั้งหมด
@@ -2062,6 +2304,223 @@
                     a.click();
                     document.body.removeChild(a);
                 }, i * 250);
+            });
+        }
+
+        // ==================== TAB 6: PDF -> IMAGE ENGINE ====================
+        const pdfFilesInput = document.getElementById('pdfFilesInput');
+        const pdfDropzoneLabel = document.getElementById('pdfDropzoneLabel');
+        const btnConvertPdf = document.getElementById('btnConvertPdf');
+        const btnDownloadPdfZip = document.getElementById('btnDownloadPdfZip');
+        const pdfConsole = document.getElementById('pdfConsole');
+        const pdfGallery = document.getElementById('pdfGallery');
+
+        let selectedPdfFiles = [];
+        let pdfZip = new JSZip();
+        let pdfStats = { files: 0, total: 0, success: 0, error: 0 };
+        let pdfUsedNames = new Set();
+
+        pdfFilesInput.addEventListener('change', function(e) {
+            selectedPdfFiles = Array.from(e.target.files);
+
+            pdfDropzoneLabel.textContent = selectedPdfFiles.length > 0
+                ? `เลือกแล้ว ${selectedPdfFiles.length} ไฟล์ (คลิกเพื่อเลือกใหม่)`
+                : 'Select one or more PDF files or drag them here';
+
+            if (selectedPdfFiles.length > 0) {
+                btnConvertPdf.removeAttribute('disabled');
+                btnConvertPdf.className = "w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-500 active:scale-95 text-white rounded-md text-sm font-semibold flex items-center justify-center gap-2 transition-all";
+            } else {
+                btnConvertPdf.disabled = true;
+                btnConvertPdf.className = "w-full py-2.5 px-4 bg-slate-800 text-slate-500 rounded-md text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-not-allowed";
+            }
+        });
+
+        function appendPdfLog(message, type = 'info') {
+            const line = document.createElement('div');
+            let colorClass = 'text-slate-400';
+            let prefix = '> ';
+
+            if (type === 'success') {
+                colorClass = 'text-emerald-400';
+                prefix = '✅ ';
+            } else if (type === 'error') {
+                colorClass = 'text-rose-400';
+                prefix = '❌ ';
+            } else if (type === 'title') {
+                colorClass = 'text-cyan-400 font-bold border-b border-slate-800 pb-1 mt-3';
+                prefix = '';
+            }
+
+            line.className = colorClass;
+            line.textContent = `${prefix}${message}`;
+            pdfConsole.appendChild(line);
+            pdfConsole.scrollTop = pdfConsole.scrollHeight;
+        }
+
+        function clearPdfLogs() {
+            pdfConsole.innerHTML = '<div class="text-slate-500">> Logs cleared. Ready.</div>';
+        }
+
+        function updatePdfStatsUI() {
+            document.getElementById('pdf-files').textContent = pdfStats.files;
+            document.getElementById('pdf-total').textContent = pdfStats.total;
+            document.getElementById('pdf-success').textContent = pdfStats.success;
+            document.getElementById('pdf-error').textContent = pdfStats.error;
+            document.getElementById('pdfGalleryCount').textContent = pdfStats.success;
+        }
+
+        // แปลง Canvas เป็น Base64 (ไม่รวม data:...;base64, prefix) ผ่าน Blob เพื่อประสิทธิภาพที่ดีกว่า toDataURL ตรงๆ กับไฟล์ใหญ่
+        function canvasToBase64(canvas, mime, quality) {
+            return new Promise((resolve, reject) => {
+                canvas.toBlob((blob) => {
+                    if (!blob) { reject(new Error('Canvas to Blob failed')); return; }
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const result = reader.result;
+                        const commaIdx = result.indexOf(',');
+                        resolve(commaIdx >= 0 ? result.substring(commaIdx + 1) : result);
+                    };
+                    reader.onerror = () => reject(new Error('อ่าน Blob ไม่สำเร็จ'));
+                    reader.readAsDataURL(blob);
+                }, mime, quality);
+            });
+        }
+
+        async function convertPdfToImages() {
+            if (selectedPdfFiles.length === 0) return;
+            if (!window['pdfjsLib']) {
+                showToast('ไม่สามารถโหลดไลบรารี PDF.js ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต', 'error');
+                return;
+            }
+
+            const outputFormat = document.getElementById('pdfOutputFormat').value; // 'png' or 'jpeg'
+            const scale = parseFloat(document.getElementById('pdfScale').value) || 2;
+            const mime = outputFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+            const ext = outputFormat === 'jpeg' ? 'jpg' : 'png';
+            const quality = outputFormat === 'jpeg' ? 0.92 : undefined;
+
+            const originalBtnHtml = btnConvertPdf.innerHTML;
+            btnConvertPdf.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Converting...';
+            btnConvertPdf.disabled = true;
+
+            // Reset state สำหรับการ Convert รอบใหม่
+            pdfZip = new JSZip();
+            pdfStats = { files: 0, total: 0, success: 0, error: 0 };
+            pdfUsedNames.clear();
+            resetGalleryItems('pdfGallery');
+            pdfGallery.innerHTML = '';
+            clearPdfLogs();
+            updatePdfStatsUI();
+
+            appendPdfLog(`Starting conversion of ${selectedPdfFiles.length} PDF file(s) [Format: ${outputFormat.toUpperCase()}, Scale: ${scale}x]...`, 'title');
+
+            for (const file of selectedPdfFiles) {
+                pdfStats.files++;
+                appendPdfLog(`Loading: ${file.name}`, 'info');
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                    const pdfDoc = await loadingTask.promise;
+                    const numPages = pdfDoc.numPages;
+                    const baseName = file.name.replace(/\.pdf$/i, '');
+
+                    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                        pdfStats.total++;
+                        updatePdfStatsUI();
+
+                        try {
+                            const page = await pdfDoc.getPage(pageNum);
+                            const viewport = page.getViewport({ scale: scale });
+
+                            const canvas = document.createElement('canvas');
+                            canvas.width = viewport.width;
+                            canvas.height = viewport.height;
+                            const ctx = canvas.getContext('2d');
+
+                            // พื้นหลังขาวสำหรับ JPG (กัน Transparent กลายเป็นดำ)
+                            if (outputFormat === 'jpeg') {
+                                ctx.fillStyle = '#FFFFFF';
+                                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            }
+
+                            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+                            const base64 = await canvasToBase64(canvas, mime, quality);
+
+                            let pageLabel = numPages > 1 ? String(pageNum).padStart(3, '0') : null;
+                            let fileName = pageLabel ? `${baseName}_page${pageLabel}.${ext}` : `${baseName}.${ext}`;
+
+                            // กันชื่อไฟล์ซ้ำข้าม PDF หลายไฟล์ที่ตั้งชื่อเดียวกัน
+                            let finalName = fileName;
+                            let dupCount = 1;
+                            while (pdfUsedNames.has(finalName)) {
+                                const dotIdx = fileName.lastIndexOf('.');
+                                finalName = dotIdx > -1
+                                    ? `${fileName.substring(0, dotIdx)}_dup${dupCount}${fileName.substring(dotIdx)}`
+                                    : `${fileName}_dup${dupCount}`;
+                                dupCount++;
+                            }
+                            pdfUsedNames.add(finalName);
+
+                            pdfZip.file(finalName, base64, { base64: true });
+
+                            const dimensionLabel = `${Math.round(viewport.width)}x${Math.round(viewport.height)}px`;
+                            const fileTypeObj = outputFormat === 'jpeg'
+                                ? { ext: 'jpg', mime: 'image/jpeg', label: 'JPG' }
+                                : { ext: 'png', mime: 'image/png', label: 'PNG' };
+
+                            appendDecodedCard(finalName, finalName, base64, false, false, fileTypeObj, dimensionLabel, pdfGallery);
+                            appendPdfLog(`${file.name} : Page ${pageNum}/${numPages} -> ${finalName} [${dimensionLabel}]`, 'success');
+                            pdfStats.success++;
+                        } catch (pageErr) {
+                            appendPdfLog(`${file.name} : Page ${pageNum} -> Fail (${pageErr.message})`, 'error');
+                            pdfStats.error++;
+                        }
+                        updatePdfStatsUI();
+                    }
+                } catch (fileErr) {
+                    appendPdfLog(`${file.name} : Fail to open PDF (${fileErr.message})`, 'error');
+                    pdfStats.error++;
+                    updatePdfStatsUI();
+                }
+            }
+
+            appendPdfLog("========================================", 'title');
+            appendPdfLog("         FINAL SUMMARY REPORT", 'title');
+            appendPdfLog("========================================", 'title');
+            appendPdfLog(`Files Processed : ${pdfStats.files}`);
+            appendPdfLog(`Total Pages : ${pdfStats.total}`);
+            appendPdfLog(`Success : ${pdfStats.success}`, 'success');
+            appendPdfLog(`Errors : ${pdfStats.error}`, 'error');
+
+            btnConvertPdf.innerHTML = originalBtnHtml;
+            btnConvertPdf.disabled = false;
+
+            if (pdfStats.success > 0) {
+                btnDownloadPdfZip.removeAttribute('disabled');
+                btnDownloadPdfZip.className = "w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white rounded-md font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-brand-500/20";
+                showToast(`แปลงสำเร็จ ${pdfStats.success} หน้า จาก ${pdfStats.files} ไฟล์ PDF`, 'success');
+            } else {
+                showToast('ไม่สามารถแปลง PDF เป็นรูปภาพได้ กรุณาตรวจสอบไฟล์อีกครั้ง', 'error');
+            }
+        }
+
+        function downloadPdfZip() {
+            if (pdfStats.success === 0) return;
+
+            btnDownloadPdfZip.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Generating ZIP File...';
+            btnDownloadPdfZip.disabled = true;
+
+            pdfZip.generateAsync({ type: "blob" }).then(function(content) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `PDF_Images_${Date.now()}.zip`;
+                link.click();
+
+                btnDownloadPdfZip.innerHTML = '<i class="fa-solid fa-file-zipper"></i> Download All (ZIP)';
+                btnDownloadPdfZip.removeAttribute('disabled');
             });
         }
     </script>
