@@ -231,7 +231,113 @@
             from { transform: scaleX(1); }
             to { transform: scaleX(0); }
         }
-    </style>
+    
+/* ==================== INTERACTIVE UX ENHANCEMENTS ==================== */
+@keyframes statPulse {
+  0% { transform:scale(1); filter:brightness(1); }
+  35% { transform:scale(1.16); filter:brightness(1.55); text-shadow:0 0 18px currentColor; }
+  100% { transform:scale(1); filter:brightness(1); }
+}
+.stat-animate { animation:statPulse .48s ease-out; }
+@keyframes resultFlash {
+  0% { box-shadow:0 0 0 rgba(34,211,238,0); border-color:rgba(51,65,85,.8); }
+  30% { box-shadow:0 0 0 4px rgba(34,211,238,.12), 0 0 36px rgba(34,211,238,.20); border-color:rgba(34,211,238,.65); }
+  100% { box-shadow:0 0 0 rgba(34,211,238,0); border-color:rgba(51,65,85,.8); }
+}
+.result-focus { animation:resultFlash 1.15s ease-out; }
+@keyframes cardEnter {
+  from { opacity:0; transform:translateY(14px) scale(.985); }
+  to { opacity:1; transform:translateY(0) scale(1); }
+}
+.result-card-enter { animation:cardEnter .42s cubic-bezier(.2,.75,.25,1) both; }
+.dropzone-active {
+  border-color:rgba(34,211,238,.9) !important;
+  background:rgba(8,47,73,.32) !important;
+  box-shadow:0 0 0 3px rgba(34,211,238,.10), 0 0 34px rgba(34,211,238,.20), inset 0 0 30px rgba(34,211,238,.05);
+  transform:translateY(-1px);
+}
+.dropzone-active i { color:#22d3ee !important; transform:scale(1.12); }
+.dropzone-active .drop-hint { color:#67e8f9 !important; }
+.result-search-wrap { display:flex; gap:.6rem; align-items:center; margin-bottom:.8rem; }
+.result-search-wrap .result-search { flex:1; }
+.result-search {
+  width:100%; background:rgba(2,6,23,.72); border:1px solid #1e293b; color:#cbd5e1;
+  border-radius:.5rem; padding:.62rem .8rem .62rem 2.25rem; outline:none; font-size:.78rem;
+  transition:border-color .2s, box-shadow .2s;
+}
+.result-search:focus { border-color:rgba(34,211,238,.55); box-shadow:0 0 0 3px rgba(34,211,238,.08); }
+.result-search-box { position:relative; flex:1; }
+.result-search-box > i { position:absolute; left:.78rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:.78rem; pointer-events:none; }
+.filter-count { font-size:.68rem; color:#64748b; white-space:nowrap; }
+.rename-summary { margin-top:1rem; padding:.9rem 1rem; background:rgba(2,6,23,.45); border:1px solid #1e293b; border-radius:.55rem; }
+.rename-summary-row { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:.5rem; }
+.rename-progress { height:7px; border-radius:999px; background:#0f172a; overflow:hidden; border:1px solid #1e293b; }
+.rename-progress > div { height:100%; width:0%; border-radius:inherit; background:linear-gradient(90deg,#06b6d4,#22d3ee); transition:width .35s ease; box-shadow:0 0 14px rgba(34,211,238,.35); }
+.dropzone-file-count { margin-top:.45rem; min-height:1rem; font-size:.68rem; color:#64748b; }
+@media(max-width:640px){ .result-search-wrap{align-items:stretch; flex-direction:column}.filter-count{align-self:flex-end} }
+
+
+/* ===== V2 INTERACTIVITY: progress / bulk selection / reports / responsive ===== */
+.processing-progress{margin:0 0 18px;padding:12px 14px;border:1px solid #1a2032;background:rgba(8,10,20,.88);border-radius:11px;box-shadow:0 8px 30px rgba(0,0,0,.12)}
+.processing-progress.hidden{display:none}.progress-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px}.progress-title{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:#7b89a3;font-weight:700}.progress-value{font:700 12px 'IBM Plex Mono';color:#22d3ee}.progress-track{height:7px;background:#111827;border:1px solid #1f2937;border-radius:999px;overflow:hidden}.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#06b6d4,#22d3ee);box-shadow:0 0 14px rgba(34,211,238,.35);transition:width .18s ease}.progress-meta{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:10px;color:#52607a}.bulk-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px;padding:9px 10px;border:1px solid #1a2032;background:#0b0f1a;border-radius:9px}.bulk-toolbar .bulk-count{font:600 10px 'IBM Plex Mono';color:#71809b;margin-right:auto}.bulk-toolbar button{font-size:10px;padding:6px 9px;border-radius:7px}.bulk-toolbar button:disabled{opacity:.4;cursor:not-allowed}.result-select{position:absolute;top:8px;right:8px;width:17px;height:17px;accent-color:#06b6d4;z-index:4;cursor:pointer;filter:drop-shadow(0 0 4px rgba(6,182,212,.3))}.result-card-selected{border-color:rgba(34,211,238,.65)!important;box-shadow:0 0 0 1px rgba(34,211,238,.2),0 12px 30px rgba(6,182,212,.08)!important}.bulk-row-select{width:16px;height:16px;accent-color:#06b6d4;cursor:pointer}.report-actions{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto}.report-actions button{font-size:10px;padding:6px 9px;border-radius:7px}.mobile-compact{min-width:0}@media(max-width:640px){.processing-progress{position:sticky;top:57px;z-index:40}.bulk-toolbar{position:sticky;top:57px;z-index:39}.bulk-toolbar .bulk-count{width:100%;flex-basis:100%;margin-right:0}.report-actions{width:100%;margin-left:0}.result-search-wrap{flex-direction:column!important;align-items:stretch!important}.result-search-box{width:100%!important}.tab-content .grid{gap:12px}.tab-content .panel-marks{padding:14px}.tab-content button{min-height:40px}.app-main main{padding:12px}.page-hero{margin-bottom:12px}.dropzone-file-count{max-width:100%;word-break:break-word}}
+
+</style>
+
+<style id="ui-overhaul">
+/* ===== UI OVERHAUL: Interactive Workspace ===== */
+:root{--ui-sidebar:270px}
+body{overflow-x:hidden}
+.app-shell{display:flex;min-height:calc(100vh - 3px)}
+.app-sidebar{position:fixed;left:0;top:3px;bottom:0;width:var(--ui-sidebar);z-index:60;background:rgba(8,10,20,.96);border-right:1px solid #1a2032;backdrop-filter:blur(18px);transition:transform .25s ease,width .25s ease;overflow:hidden}
+.app-sidebar.collapsed{width:76px}
+.app-main{margin-left:var(--ui-sidebar);width:calc(100% - var(--ui-sidebar));transition:margin-left .25s ease,width .25s ease}
+.app-main.sidebar-collapsed{margin-left:76px;width:calc(100% - 76px)}
+.nav-item{position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border:1px solid transparent;border-radius:10px;color:#71809b;text-align:left;transition:.18s ease}
+.nav-item:hover{background:#141926;color:#dde3ec;border-color:#1a2032;transform:translateX(2px)}
+.nav-item.active{background:linear-gradient(90deg,rgba(6,182,212,.16),rgba(6,182,212,.04));color:#ecfeff;border-color:rgba(6,182,212,.32);box-shadow:inset 3px 0 #06b6d4,0 8px 24px rgba(0,0,0,.16)}
+.nav-icon{width:34px;height:34px;flex:0 0 34px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#0e1220;border:1px solid #1a2032}
+.nav-item.active .nav-icon{color:#22d3ee;border-color:rgba(34,211,238,.35);background:rgba(6,182,212,.10)}
+/* Collapsed sidebar state — the collapsed class lives on #appSidebar */
+.app-sidebar.collapsed .nav-label,.app-sidebar.collapsed .nav-meta,.app-sidebar.collapsed .brand-copy,.app-sidebar.collapsed .sidebar-section-label{display:none}
+.app-sidebar.collapsed .nav-item{justify-content:center;padding:8px;width:48px;margin-inline:auto}
+.app-sidebar.collapsed .nav-icon{width:40px;height:40px}
+.app-sidebar.collapsed .nav-item:hover{transform:none}
+.app-sidebar.collapsed .h-full{padding-left:8px;padding-right:8px}
+.app-sidebar.collapsed .nav-item{position:relative}
+.app-sidebar.collapsed .nav-item::after{content:attr(data-tooltip);position:absolute;left:58px;top:50%;transform:translateY(-50%) translateX(-4px);opacity:0;pointer-events:none;white-space:nowrap;padding:7px 10px;border:1px solid #1f2937;border-radius:7px;background:#0b0f1a;color:#dbe4f0;font-size:10px;box-shadow:0 10px 25px rgba(0,0,0,.35);transition:.16s ease;z-index:100}
+.app-sidebar.collapsed .nav-item:hover::after{opacity:1;transform:translateY(-50%) translateX(0)}
+.app-sidebar.collapsed .mt-auto button .nav-label{display:none}
+
+.app-sidebar.collapsed .mt-auto button{width:48px;margin-inline:auto;padding-left:8px;padding-right:8px}
+.app-sidebar.collapsed #sidebarToggleIcon{margin:0}
+.workspace-top{position:sticky;top:0;z-index:50;background:rgba(14,18,32,.82);backdrop-filter:blur(16px);border-bottom:1px solid #1a2032}
+.result-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:20px}
+.result-kpi{background:linear-gradient(145deg,rgba(14,18,32,.96),rgba(8,10,20,.96));border:1px solid #1a2032;border-radius:12px;padding:13px 15px;min-height:82px;position:relative;overflow:hidden}
+.result-kpi::after{content:'';position:absolute;right:-20px;top:-25px;width:70px;height:70px;border-radius:50%;background:rgba(6,182,212,.06)}
+.result-kpi .kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#71809b;font-weight:700}
+.result-kpi .kpi-value{font-family:'IBM Plex Mono',monospace;font-size:24px;line-height:1.15;font-weight:700;color:#eef1f6;margin-top:5px}
+.result-kpi .kpi-sub{font-size:10px;color:#525f79;margin-top:3px}
+.page-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.page-hero h2{font-family:'Chakra Petch',sans-serif;font-size:23px;font-weight:700;color:#eef1f6}
+.page-hero p{font-size:12px;color:#71809b;margin-top:3px}
+.live-badge{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #1a2032;background:#080a14;border-radius:999px;font:600 10px 'IBM Plex Mono';color:#71809b;white-space:nowrap}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;animation:pulse 1.8s infinite}
+@keyframes pulse{50%{opacity:.35;transform:scale(.75)}}
+.mobile-menu{display:none}
+.sidebar-overlay{display:none}
+/* result-focused visual hierarchy */
+.tab-content>.bg-slate-900,.tab-content .panel-marks{box-shadow:0 10px 35px rgba(0,0,0,.14)}
+.tab-content h3{letter-spacing:-.01em}
+.tab-content button{transition:transform .15s ease,box-shadow .15s ease,background-color .15s ease}
+.tab-content button:active{transform:scale(.97)}
+/* Make result galleries feel like a primary output area */
+[id$="Gallery"]{min-height:120px}
+[id$="Gallery"]>div:not(.col-span-full){transition:transform .18s ease,border-color .18s ease}
+[id$="Gallery"]>div:not(.col-span-full):hover{transform:translateY(-2px)}
+@media(max-width:1024px){.app-sidebar{transform:translateX(-100%);width:270px}.app-sidebar.open{transform:translateX(0)}.app-main,.app-main.sidebar-collapsed{margin-left:0;width:100%}.mobile-menu{display:flex}.sidebar-overlay{position:fixed;inset:3px 0 0;z-index:55;background:rgba(0,0,0,.58);backdrop-filter:blur(2px)}.sidebar-overlay.show{display:block}.result-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.result-strip{grid-template-columns:1fr 1fr}.result-kpi{min-height:74px;padding:10px}.result-kpi .kpi-value{font-size:20px}.page-hero{align-items:flex-start}.page-hero h2{font-size:19px}}
+</style>
+
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col">
 
@@ -266,48 +372,59 @@
     <!-- Status LED Strip -->
     <div class="h-[3px] w-full bg-gradient-to-r from-brand-500 via-amber-400 to-brand-500 bg-[length:200%_100%] animate-[ledsweep_6s_linear_infinite]"></div>
 
-    <!-- Top Navigation Bar -->
-    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-6 py-4">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="relative bg-slate-950 text-brand-400 p-2.5 rounded-md border border-brand-500/40 shadow-lg shadow-brand-500/10">
-                    <i class="fa-solid fa-microchip text-xl"></i>
-                    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 border-2 border-slate-950"></span>
+    <!-- Interactive Workspace Navigation -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
+    <aside class="app-sidebar" id="appSidebar">
+        <div class="h-full flex flex-col p-4">
+            <div class="flex items-center gap-3 px-2 py-2 mb-5">
+                <div class="relative bg-slate-950 text-brand-400 p-2.5 rounded-xl border border-brand-500/40 shadow-lg shadow-brand-500/10 shrink-0">
+                    <i class="fa-solid fa-microchip text-xl"></i><span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
                 </div>
-                <div>
-                    <h1 class="font-display text-xl font-bold uppercase tracking-wider bg-gradient-to-r from-brand-300 via-brand-400 to-amber-400 bg-clip-text text-transparent">
-                        Image Utilities Toolkit
-                    </h1>
-                    <p class="text-[11px] text-slate-500 readout tracking-wide">FAB-TOOL // Base64 Decoder &amp; Batch File Renamer</p>
+                <div class="brand-copy min-w-0">
+                    <div class="font-display text-base font-bold tracking-wide text-slate-100 truncate">IMAGE UTILITIES</div>
+                    <div class="text-[9px] readout text-slate-500 tracking-wider">FAB-TOOL // WORKSPACE</div>
                 </div>
             </div>
-            
-            <!-- Tab Controls -->
-            <div class="flex bg-slate-950/60 p-1 rounded-md border border-slate-800 gap-0.5 flex-wrap">
-                <button onclick="switchTab('decode-tab')" id="btn-decode-tab" class="tab-btn px-5 py-2 rounded-sm text-xs font-semibold uppercase tracking-wide transition-all duration-200 bg-brand-600 text-white shadow-md">
-                    <i class="fa-solid fa-file-code mr-2"></i>Base64 → eApplication
-                </button>
-                <button onclick="switchTab('rename-tab')" id="btn-rename-tab" class="tab-btn px-5 py-2 rounded-sm text-xs font-semibold uppercase tracking-wide transition-all duration-200 text-slate-400 hover:text-slate-200">
-                    <i class="fa-solid fa-signature mr-2"></i>Rename Files
-                </button>
-                <button onclick="switchTab('encode-tab')" id="btn-encode-tab" class="tab-btn px-5 py-2 rounded-sm text-xs font-semibold uppercase tracking-wide transition-all duration-200 text-slate-400 hover:text-slate-200">
-                    <i class="fa-solid fa-file-export mr-2"></i>Image → Base64
-                </button>
-                <button onclick="switchTab('paste-tab')" id="btn-paste-tab" class="tab-btn px-5 py-2 rounded-sm text-xs font-semibold uppercase tracking-wide transition-all duration-200 text-slate-400 hover:text-slate-200">
-                    <i class="fa-solid fa-paste mr-2"></i>Base64 → Image
-                </button>
-                <button onclick="switchTab('decodesim-tab')" id="btn-decodesim-tab" class="tab-btn px-5 py-2 rounded-sm text-xs font-semibold uppercase tracking-wide transition-all duration-200 text-slate-400 hover:text-slate-200">
-                    <i class="fa-solid fa-sim-card mr-2"></i>Base64 → Image (ChgSIM)
-                </button>
-                <button onclick="switchTab('pdf-tab')" id="btn-pdf-tab" class="tab-btn px-5 py-2 rounded-sm text-xs font-semibold uppercase tracking-wide transition-all duration-200 text-slate-400 hover:text-slate-200">
-                    <i class="fa-solid fa-file-pdf mr-2"></i>PDF → Image
-                </button>
+            <div class="sidebar-section-label text-[9px] font-bold uppercase tracking-[.18em] text-slate-600 px-2 mb-2">Processing Tools</div>
+            <nav class="space-y-1.5" id="workspaceNav">
+                <button onclick="switchTab('decode-tab')" id="nav-decode-tab" data-tooltip="Base64 → eApplication" class="nav-item active"><span class="nav-icon"><i class="fa-solid fa-file-code"></i></span><span class="nav-label min-w-0"><b class="block text-xs">Base64 → eApplication</b><small class="nav-meta text-[9px] text-slate-600">Decode & map images</small></span></button>
+                <button onclick="switchTab('rename-tab')" id="nav-rename-tab" data-tooltip="Rename Files" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-signature"></i></span><span class="nav-label min-w-0"><b class="block text-xs">Rename Files</b><small class="nav-meta text-[9px] text-slate-600">Batch mapping</small></span></button>
+                <button onclick="switchTab('encode-tab')" id="nav-encode-tab" data-tooltip="Image → Base64" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-file-export"></i></span><span class="nav-label min-w-0"><b class="block text-xs">Image → Base64</b><small class="nav-meta text-[9px] text-slate-600">Encode images</small></span></button>
+                <button onclick="switchTab('paste-tab')" id="nav-paste-tab" data-tooltip="Base64 → Image" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-paste"></i></span><span class="nav-label min-w-0"><b class="block text-xs">Base64 → Image</b><small class="nav-meta text-[9px] text-slate-600">Paste & preview</small></span></button>
+                <button onclick="switchTab('decodesim-tab')" id="nav-decodesim-tab" data-tooltip="Base64 → Image (ChgSIM)" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-sim-card"></i></span><span class="nav-label min-w-0"><b class="block text-xs">Base64 → Image (ChgSIM)</b><small class="nav-meta text-[9px] text-slate-600">SIM image extraction</small></span></button>
+                <button onclick="switchTab('pdf-tab')" id="nav-pdf-tab" data-tooltip="PDF → Image" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-file-pdf"></i></span><span class="nav-label min-w-0"><b class="block text-xs">PDF → Image</b><small class="nav-meta text-[9px] text-slate-600">Render PDF pages</small></span></button>
+            </nav>
+            <div class="mt-auto pt-4 border-t border-slate-800/80">
+                <button onclick="toggleSidebar()" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-200 hover:border-slate-700 transition-all" title="Collapse sidebar"><i class="fa-solid fa-angles-left" id="sidebarToggleIcon"></i><span class="nav-label text-[10px] font-semibold uppercase tracking-wider">Collapse Menu</span></button>
             </div>
         </div>
-    </header>
+    </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-6">
+    <div class="app-main" id="appMain">
+        <header class="workspace-top px-4 sm:px-6 py-3">
+            <div class="max-w-[1500px] mx-auto flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <button class="mobile-menu w-10 h-10 items-center justify-center rounded-lg bg-slate-950 border border-slate-800 text-slate-300" onclick="toggleSidebar(true)"><i class="fa-solid fa-bars"></i></button>
+                    <div class="min-w-0"><div id="workspaceTitle" class="font-display font-bold text-base sm:text-lg text-slate-100 truncate">Base64 → eApplication</div><div id="workspaceSubtitle" class="text-[10px] readout text-slate-600 truncate">Decode, classify, map and export image data</div></div>
+                </div>
+                <div class="live-badge"><span class="live-dot"></span><span>READY / LOCAL PROCESSING</span></div>
+            </div>
+        </header>
+        <main class="flex-1 max-w-[1500px] w-full mx-auto p-4 sm:p-6">
+            <div class="result-strip" id="globalResultStrip">
+                <div class="result-kpi"><div class="kpi-label">Current Tool</div><div class="kpi-value text-brand-300" id="kpiTool">BASE64</div><div class="kpi-sub">active workspace</div></div>
+                <div class="result-kpi"><div class="kpi-label">Processed</div><div class="kpi-value" id="kpiProcessed">0</div><div class="kpi-sub" id="kpiProcessedSub">items in current tool</div></div>
+                <div class="result-kpi"><div class="kpi-label">Success</div><div class="kpi-value text-emerald-400" id="kpiSuccess">0</div><div class="kpi-sub">completed results</div></div>
+                <div class="result-kpi"><div class="kpi-label">Errors</div><div class="kpi-value text-rose-400" id="kpiErrors">0</div><div class="kpi-sub">needs attention</div></div>
+            </div>
+
+            <div id="processingProgress" class="processing-progress hidden" aria-live="polite">
+                <div class="progress-head"><span id="progressTitle" class="progress-title">Processing</span><span id="progressValue" class="progress-value">0%</span></div>
+                <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+                <div class="progress-meta"><span id="progressDetail">Waiting...</span><span id="progressEta">Ready</span></div>
+            </div>
+
+        <div class="page-hero"><div><h2 id="pageTitle">Base64 → eApplication</h2><p id="pageDescription">แปลง Base64 พร้อมวิเคราะห์ชนิดไฟล์ จัด Mapping และดูผลลัพธ์แบบทันที</p></div><div class="hidden sm:block text-right"><div class="text-[9px] uppercase tracking-[.18em] text-slate-600">OUTPUT FIRST</div><div class="text-xs text-slate-400">ผลลัพธ์จะแสดงด้านล่างทันทีหลังประมวลผล</div></div></div>
 
         <!-- ==================== TAB 1: DECODE BASE64 ==================== -->
         <div id="decode-tab" class="tab-content space-y-6">
@@ -327,8 +444,8 @@
                             <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400 group-hover:text-brand-500 group-hover:bg-slate-800/80 transition-colors">
                                 <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
                             </div>
-                            <div class="text-slate-300 font-medium text-sm">Upload File</div>
-                            <div class="text-[10px] text-slate-500">.txt format only</div>
+                            <div class="text-slate-300 font-medium text-sm drop-hint">Upload File</div>
+                            <div class="text-[10px] text-slate-500">.txt format only</div><div id="decodeDropzoneFileCount" class="dropzone-file-count"></div>
                         </div>
                     </div>
                 </div>
@@ -395,11 +512,17 @@
             </div>
 
             <!-- Image Results Grid -->
-            <div>
-                <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-images text-brand-500"></i>
-                    Decoded Image Previews (<span id="galleryCount">0</span>)
-                </h3>
+            <div id="decodeResultsSection">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                    <h3 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-images text-brand-500"></i>
+                        Decoded Image Previews (<span id="galleryCount">0</span>)
+                    </h3>
+                </div>
+                <div class="result-search-wrap">
+                    <div class="result-search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="decodeResultSearch" class="result-search" type="search" placeholder="ค้นหาชื่อไฟล์ผลลัพธ์..."></div>
+                    <span id="decodeFilterCount" class="filter-count">0 results</span>
+                </div>
                 <div id="imageGallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     <!-- Dynamic Items will be appended here -->
                     <div class="col-span-full py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-lg">
@@ -423,14 +546,14 @@
                     </div>
 
                     <!-- Multiple Files Dropzone -->
-                    <div class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-md p-10 text-center cursor-pointer bg-slate-950/40 relative group">
+                    <div id="rename-dropzone" class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-md p-10 text-center cursor-pointer bg-slate-950/40 relative group">
                         <input type="file" id="renameFilesInput" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                         <div class="space-y-3 pointer-events-none">
                             <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400 group-hover:text-brand-500 group-hover:bg-slate-800/80 transition-colors">
                                 <i class="fa-solid fa-folder-open text-xl"></i>
                             </div>
-                            <div class="text-slate-300 font-medium">Select multiple files or drag them here</div>
-                            <div class="text-xs text-slate-500">Supports any file type (e.g. PDF, JPG, PNG)</div>
+                            <div class="text-slate-300 font-medium drop-hint">Select multiple files or drag them here</div>
+                            <div class="text-xs text-slate-500">Supports any file type (e.g. PDF, JPG, PNG)</div><div id="renameDropzoneFileCount" class="dropzone-file-count"></div>
                         </div>
                     </div>
                 </div>
@@ -450,7 +573,7 @@
             </div>
 
             <!-- Process & Export Section -->
-            <div class="bg-slate-900 border border-slate-800 rounded-lg panel-marks p-6">
+            <div id="renameResultsSection" class="bg-slate-900 border border-slate-800 rounded-lg panel-marks p-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
                         <h3 class="text-lg font-semibold text-slate-200">Matching Directory & Review</h3>
@@ -468,11 +591,27 @@
                     </div>
                 </div>
 
+                <div class="rename-summary">
+                    <div class="rename-summary-row">
+                        <div class="text-xs uppercase tracking-wider text-slate-400">Mapping Progress</div>
+                        <div class="text-xs font-mono"><span id="renameMatchedCount" class="text-emerald-400">0</span><span class="text-slate-600"> / </span><span id="renameTotalCount" class="text-slate-300">0</span> <span class="text-slate-500">Matched</span></div>
+                    </div>
+                    <div class="rename-progress"><div id="renameProgressBar"></div></div>
+                    <div class="flex justify-between mt-2 text-[10px] text-slate-500"><span id="renameProgressLabel">Waiting for mapping...</span><span><span id="renameUnmatchedCount">0</span> unmatched</span></div>
+                </div>
+
+                <div class="result-search-wrap mt-4">
+                    <div class="result-search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="renameResultSearch" class="result-search" type="search" placeholder="ค้นหาชื่อไฟล์ Original / Target..."></div>
+                    <span id="renameFilterCount" class="filter-count">0 files</span>
+                </div>
+                <div class="bulk-toolbar" data-kind="rename"><span class="bulk-count" id="bulkCount-rename">0 selected / 0 files</span><button type="button" onclick="selectAllRenameRows()"><i class="fa-solid fa-check-double"></i> Select All</button><button type="button" onclick="clearSelectedRenameRows()"><i class="fa-solid fa-square"></i> Clear</button><button type="button" id="bulkDownload-rename" onclick="downloadSelectedRename()" disabled><i class="fa-solid fa-download"></i> Download Selected</button><button type="button" onclick="exportResultReport('rename','csv')"><i class="fa-solid fa-file-csv"></i> CSV</button><button type="button" onclick="exportResultReport('rename','json')"><i class="fa-solid fa-file-code"></i> JSON</button></div>
+
                 <!-- Table Preview -->
                 <div class="overflow-x-auto border border-slate-800 rounded-md bg-slate-950/20">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-950/60 border-b border-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="py-3 px-4"><input id="renameSelectAll" type="checkbox" class="bulk-row-select" title="Select all"></th>
                                 <th class="py-3 px-4">#</th>
                                 <th class="py-3 px-4">Original Filename</th>
                                 <th class="py-3 px-4">Target Filename (Mapped)</th>
@@ -482,7 +621,7 @@
                         <tbody id="renameTableBody" class="text-sm divide-y divide-slate-850">
                             <!-- Empty State row -->
                             <tr>
-                                <td colspan="4" class="py-12 text-center text-slate-500">
+                                <td colspan="5" class="py-12 text-center text-slate-500">
                                     <i class="fa-solid fa-file-signature text-3xl mb-2 block opacity-30"></i>
                                     ยังไม่ได้อัปโหลดไฟล์ต้นฉบับเพื่อแปลงชื่อ
                                 </td>
@@ -519,24 +658,28 @@
                 </div>
 
                 <!-- Multiple Files Dropzone -->
-                <div class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-md p-10 text-center cursor-pointer bg-slate-950/40 relative group">
+                <div id="encode-dropzone" class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-md p-10 text-center cursor-pointer bg-slate-950/40 relative group">
                     <input type="file" id="encodeFilesInput" accept="image/*" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                     <div class="space-y-3 pointer-events-none">
                         <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400 group-hover:text-brand-500 group-hover:bg-slate-800/80 transition-colors">
                             <i class="fa-solid fa-images text-xl"></i>
                         </div>
-                        <div class="text-slate-300 font-medium" id="encodeDropzoneLabel">Select multiple images or drag them here</div>
-                        <div class="text-xs text-slate-500">Supports JPG, PNG, GIF, BMP, WEBP ฯลฯ</div>
+                        <div class="text-slate-300 font-medium" id="encodeDropzoneLabel" class="drop-hint">Select multiple images or drag them here</div>
+                        <div class="text-xs text-slate-500">Supports JPG, PNG, GIF, BMP, WEBP ฯลฯ</div><div id="encodeDropzoneFileCount" class="dropzone-file-count"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Results List -->
-            <div>
-                <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+            <div id="encodeResultsSection">
+                <h3 class="text-lg font-semibold text-slate-200 mb-3 flex items-center gap-2">
                     <i class="fa-solid fa-list text-brand-500"></i>
                     Base64 Results (<span id="encodeResultCount">0</span>)
                 </h3>
+                <div class="result-search-wrap">
+                    <div class="result-search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="encodeResultSearch" class="result-search" type="search" placeholder="ค้นหาชื่อไฟล์ผลลัพธ์..."></div>
+                    <span id="encodeFilterCount" class="filter-count">0 results</span>
+                </div>
                 <div id="encodeResultsList" class="space-y-4">
                     <div class="py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-lg">
                         <i class="fa-solid fa-file-code text-4xl mb-3 block opacity-40"></i>
@@ -617,11 +760,15 @@
             </div>
 
             <!-- Image Results Grid -->
-            <div>
-                <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+            <div id="pasteResultsSection">
+                <h3 class="text-lg font-semibold text-slate-200 mb-3 flex items-center gap-2">
                     <i class="fa-solid fa-images text-brand-500"></i>
                     Converted Image Previews (<span id="pasteGalleryCount">0</span>)
                 </h3>
+                <div class="result-search-wrap">
+                    <div class="result-search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="pasteResultSearch" class="result-search" type="search" placeholder="ค้นหาชื่อไฟล์ผลลัพธ์..."></div>
+                    <span id="pasteFilterCount" class="filter-count">0 results</span>
+                </div>
                 <div id="pasteGallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     <div class="col-span-full py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-lg">
                         <i class="fa-regular fa-image text-4xl mb-3 block opacity-40"></i>
@@ -653,6 +800,13 @@
                         รองรับ JSON ทุกรูปแบบ (เช่น <code class="text-brand-400 font-mono">{"type":"Buffer","data":[...]}</code>), โค้ดที่ก๊อปปี้มาจาก Console Log หรือ Array ตัวเลขดิบๆ ระบบจะพยายาม Parse แบบโครงสร้างก่อน แล้วกวาดซ้ำด้วย Regex เผื่อ JSON ไม่สมบูรณ์
                     </p>
 
+                    <div id="sim-dropzone" class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-md p-5 mb-3 text-center cursor-pointer bg-slate-950/40 relative group">
+                        <input type="file" id="simDropFileInput" accept=".txt,.json,.log" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <div class="pointer-events-none flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-cloud-arrow-up text-lg text-slate-500"></i>
+                            <div class="text-left"><div class="text-xs font-medium text-slate-300 drop-hint">ลาก TXT / JSON / LOG มาวางที่นี่</div><div class="text-[10px] text-slate-500">หรือคลิกเพื่อเลือกไฟล์</div><div id="simDropzoneFileCount" class="dropzone-file-count"></div></div>
+                        </div>
+                    </div>
                     <textarea id="simJsonInput" rows="7" placeholder='วางข้อมูลที่นี่... เช่น {"type":"Buffer","data":[137,80,78...]} หรือก๊อปปี้จาก Console มาวางได้เลย' class="w-full flex-1 p-3 bg-slate-950/80 border border-slate-800 rounded-md text-xs font-mono text-slate-300 focus:outline-none focus:border-brand-500 placeholder-slate-700 resize-y min-h-[160px]"></textarea>
 
                     <div class="flex flex-wrap gap-3 mt-4">
@@ -685,10 +839,14 @@
 
             <!-- Image Results Grid -->
             <div id="simOutputSection" class="hidden">
-                <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                <h3 class="text-lg font-semibold text-slate-200 mb-3 flex items-center gap-2">
                     <i class="fa-solid fa-images text-brand-500"></i>
-                    Decoded Images
+                    Decoded Images (<span id="simImgCountTitle">0</span>)
                 </h3>
+                <div class="result-search-wrap">
+                    <div class="result-search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="simResultSearch" class="result-search" type="search" placeholder="ค้นหาชื่อไฟล์ผลลัพธ์..."></div>
+                    <span id="simFilterCount" class="filter-count">0 results</span>
+                </div>
                 <div id="simImageGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
             </div>
         </div>
@@ -702,14 +860,14 @@
                     <p class="text-xs text-slate-400 mb-4">อัปโหลด PDF ได้หลายไฟล์พร้อมกัน ระบบจะแปลงทุกหน้าในไฟล์เป็นรูปภาพให้อัตโนมัติ</p>
 
                     <!-- Multiple Files Dropzone -->
-                    <div class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-md p-10 text-center cursor-pointer bg-slate-950/40 relative group">
+                    <div id="pdf-dropzone" class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-md p-10 text-center cursor-pointer bg-slate-950/40 relative group">
                         <input type="file" id="pdfFilesInput" accept="application/pdf,.pdf" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                         <div class="space-y-3 pointer-events-none">
                             <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400 group-hover:text-brand-500 group-hover:bg-slate-800/80 transition-colors">
                                 <i class="fa-solid fa-file-pdf text-xl"></i>
                             </div>
-                            <div class="text-slate-300 font-medium" id="pdfDropzoneLabel">Select one or more PDF files or drag them here</div>
-                            <div class="text-xs text-slate-500">.pdf format only</div>
+                            <div class="text-slate-300 font-medium" id="pdfDropzoneLabel" class="drop-hint">Select one or more PDF files or drag them here</div>
+                            <div class="text-xs text-slate-500">.pdf format only</div><div id="pdfDropzoneFileCount" class="dropzone-file-count"></div>
                         </div>
                     </div>
 
@@ -790,11 +948,15 @@
             </div>
 
             <!-- Image Results Grid -->
-            <div>
-                <h3 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+            <div id="pdfResultsSection">
+                <h3 class="text-lg font-semibold text-slate-200 mb-3 flex items-center gap-2">
                     <i class="fa-solid fa-images text-brand-500"></i>
                     Converted Page Previews (<span id="pdfGalleryCount">0</span>)
                 </h3>
+                <div class="result-search-wrap">
+                    <div class="result-search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="pdfResultSearch" class="result-search" type="search" placeholder="ค้นหาชื่อ PDF / หน้า / ไฟล์ผลลัพธ์..."></div>
+                    <span id="pdfFilterCount" class="filter-count">0 results</span>
+                </div>
                 <div id="pdfGallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     <div class="col-span-full py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-lg">
                         <i class="fa-regular fa-file-pdf text-4xl mb-3 block opacity-40"></i>
@@ -805,6 +967,7 @@
         </div>
 
     </main>
+    </div>
 
     <!-- Footer -->
     <footer class="border-t border-slate-900 bg-slate-950/80 py-4 px-6 text-center text-xs text-slate-500">
@@ -959,21 +1122,345 @@
             return toast;
         }
 
+
+        // ==================== V2 INTERACTIVE ENGINE ====================
+        const processingUI = { active:false, total:0, done:0, started:0, label:'Processing' };
+        const failedQueues = { decode:[], encode:[], paste:[], pdf:[] };
+
+        function setProcessingProgress(label, done, total, detail='') {
+            const box=document.getElementById('processingProgress'); if(!box) return;
+            processingUI.active=true; processingUI.label=label; processingUI.done=Math.max(0,Number(done)||0); processingUI.total=Math.max(0,Number(total)||0);
+            const pct=processingUI.total ? Math.min(100,Math.round(processingUI.done/processingUI.total*100)) : 8;
+            document.getElementById('progressTitle').textContent=label;
+            document.getElementById('progressValue').textContent=`${pct}%`;
+            document.getElementById('progressFill').style.width=`${pct}%`;
+            document.getElementById('progressDetail').textContent=detail || `${processingUI.done} / ${processingUI.total || '…'} items`;
+            const elapsed=processingUI.started ? (Date.now()-processingUI.started)/1000 : 0;
+            const rate=elapsed>0 && processingUI.done>0 ? processingUI.done/elapsed : 0;
+            const remain=rate>0 && processingUI.total ? Math.max(0,(processingUI.total-processingUI.done)/rate) : 0;
+            document.getElementById('progressEta').textContent=remain ? `ETA ${remain<60?Math.ceil(remain)+'s':Math.ceil(remain/60)+'m'}` : (pct>=100?'Finishing…':'Working…');
+            box.classList.remove('hidden');
+        }
+        function startProcessingProgress(label,total,detail='Starting…'){ processingUI.started=Date.now(); setProcessingProgress(label,0,total,detail); }
+        function finishProcessingProgress(detail='Completed'){ setProcessingProgress(processingUI.label,processingUI.total,processingUI.total,detail); setTimeout(()=>document.getElementById('processingProgress')?.classList.add('hidden'),900); processingUI.active=false; }
+        function pulseProgressError(){ const el=document.getElementById('processingProgress'); if(!el)return; el.classList.add('result-focus'); setTimeout(()=>el.classList.remove('result-focus'),900); }
+
+        function ensureBulkToolbar(sectionId, containerId, kind){
+            const section=document.getElementById(sectionId), container=document.getElementById(containerId); if(!section||!container)return;
+            if(section.querySelector('.bulk-toolbar'))return;
+            const bar=document.createElement('div'); bar.className='bulk-toolbar'; bar.dataset.kind=kind;
+            bar.innerHTML=`<span class="bulk-count" id="bulkCount-${kind}">0 selected</span><button type="button" onclick="selectAllResults('${containerId}')"><i class="fa-solid fa-check-double"></i> Select All</button><button type="button" onclick="clearSelectedResults('${containerId}')"><i class="fa-solid fa-square"></i> Clear</button><button type="button" onclick="downloadSelectedResults('${kind}')" id="bulkDownload-${kind}" disabled><i class="fa-solid fa-download"></i> Download Selected</button><button type="button" data-retry="${kind}" onclick="retryFailedOnly('${kind}')" disabled><i class="fa-solid fa-rotate-right"></i> Retry Failed</button>`;
+            section.insertBefore(bar,container);
+        }
+        function ensureReportActions(sectionId, kind){
+            const section=document.getElementById(sectionId); if(!section||section.querySelector('.report-actions'))return;
+            const h=section.querySelector('h3'); if(!h)return;
+            const wrap=document.createElement('div'); wrap.className='report-actions'; wrap.innerHTML=`<button type="button" onclick="exportResultReport('${kind}','csv')" class="bg-slate-800 hover:bg-slate-700 text-slate-300"><i class="fa-solid fa-file-csv"></i> CSV</button><button type="button" onclick="exportResultReport('${kind}','json')" class="bg-slate-800 hover:bg-slate-700 text-slate-300"><i class="fa-solid fa-file-code"></i> JSON</button>`;
+            const parent=h.parentElement; parent.classList.add('flex','flex-wrap','items-center','gap-2'); parent.appendChild(wrap);
+        }
+        function resultCheckbox(card, name, url){
+            if(!card || card.querySelector('.result-select')) return;
+            card.style.position='relative'; card.dataset.fileName=name||''; card.dataset.downloadUrl=url||'';
+            const cb=document.createElement('input'); cb.type='checkbox'; cb.className='result-select'; cb.setAttribute('aria-label',`Select ${name||'result'}`);
+            cb.addEventListener('click',e=>e.stopPropagation()); cb.addEventListener('change',()=>{card.classList.toggle('result-card-selected',cb.checked); updateBulkCounts();});
+            card.appendChild(cb);
+        }
+        function getResultCards(containerId){ const c=document.getElementById(containerId); return c?Array.from(c.children).filter(x=>!x.classList.contains('col-span-full')&&!x.classList.contains('hidden')):[]; }
+        function updateBulkCounts(){ document.querySelectorAll('.bulk-toolbar').forEach(bar=>{ const kind=bar.dataset.kind; const c=({decode:'imageGallery',encode:'encodeResultsList',paste:'pasteGallery',sim:'simImageGrid',pdf:'pdfGallery'})[kind]; const cards=getResultCards(c); const selected=cards.filter(x=>x.querySelector('.result-select')?.checked).length; const label=document.getElementById(`bulkCount-${kind}`); const btn=document.getElementById(`bulkDownload-${kind}`); if(label)label.textContent=`${selected} selected / ${cards.length} visible`; if(btn)btn.disabled=selected===0; }); }
+        function selectAllResults(containerId){ const c=document.getElementById(containerId); if(!c)return; Array.from(c.children).filter(x=>!x.classList.contains('hidden')&&!x.classList.contains('col-span-full')).forEach(card=>{const cb=card.querySelector('.result-select');if(cb){cb.checked=true;card.classList.add('result-card-selected')}}); updateBulkCounts(); }
+        function clearSelectedResults(containerId){ const c=document.getElementById(containerId); if(!c)return; Array.from(c.children).forEach(card=>{const cb=card.querySelector('.result-select');if(cb){cb.checked=false;card.classList.remove('result-card-selected')}}); updateBulkCounts(); }
+        function downloadBlob(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
+        function downloadSelectedResults(kind){
+            const map={decode:'imageGallery',encode:'encodeResultsList',paste:'pasteGallery',sim:'simImageGrid',pdf:'pdfGallery'}; const c=document.getElementById(map[kind]); if(!c)return;
+            const selected=Array.from(c.children).filter(x=>x.querySelector('.result-select')?.checked); if(!selected.length)return;
+            if(kind==='encode'){
+                const names=new Set(selected.map(x=>x.dataset.fileName)); const rows=encodeResults.filter(x=>names.has(x.name)&&x.base64).map(x=>`${x.name}=${x.base64}`); downloadBlob(new Blob([rows.join('\n')],{type:'text/plain'}),`Base64_Selected_${Date.now()}.txt`); showToast(`ดาวน์โหลดรายการที่เลือก ${rows.length} รายการแล้ว`,'success'); return;
+            }
+            const zip=new JSZip(); let added=0;
+            if(kind==='sim'){
+                const names=new Set(selected.map(x=>x.dataset.fileName));
+                simExtractedImages.filter(x=>names.has(x.fileName||x.name)).forEach(img=>{ const name=img.fileName||img.name||`Extracted_${added+1}.bin`; zip.file(name,new Uint8Array(img.data)); added++; });
+            } else {
+                selected.forEach(card=>{const url=card.dataset.downloadUrl,name=card.dataset.fileName||`result_${added+1}`; if(!url)return; const b64=url.split(',')[1]; if(b64){zip.file(name,b64,{base64:true});added++;}});
+            }
+            zip.generateAsync({type:'blob'}).then(blob=>{downloadBlob(blob,`${kind}_Selected_${Date.now()}.zip`);showToast(`สร้าง ZIP จาก ${added} รายการที่เลือกแล้ว`,'success');});
+        }
+        function ensureBulkUI(){
+            ensureBulkToolbar('decodeResultsSection','imageGallery','decode'); ensureReportActions('decodeResultsSection','decode');
+            ensureBulkToolbar('encodeResultsSection','encodeResultsList','encode'); ensureReportActions('encodeResultsSection','encode');
+            ensureBulkToolbar('pasteResultsSection','pasteGallery','paste'); ensureReportActions('pasteResultsSection','paste');
+            ensureBulkToolbar('simOutputSection','simImageGrid','sim'); ensureReportActions('simOutputSection','sim');
+            ensureBulkToolbar('pdfResultsSection','pdfGallery','pdf'); ensureReportActions('pdfResultsSection','pdf');
+        }
+        function installProgressWrappers(){
+            const originalRead=window.readFileAsBase64;
+            if(originalRead && !originalRead.__progressWrapped){const wrapped=async function(file){const r=await originalRead(file); wrapped._done=(wrapped._done||0)+1; if(processingUI.active&&processingUI.label.startsWith('Encode'))setProcessingProgress('Image → Base64',wrapped._done,processingUI.total,`${file.name}`); return r;};wrapped.__progressWrapped=true;window.readFileAsBase64=wrapped;}
+        }
+        function updateRenameBulkCount(){const rows=Array.from(document.querySelectorAll('.rename-row-select'));const selected=rows.filter(x=>x.checked).length;const count=document.getElementById('bulkCount-rename');const btn=document.getElementById('bulkDownload-rename');if(count)count.textContent=`${selected} selected / ${rows.length} files`;if(btn)btn.disabled=selected===0;}
+        function selectAllRenameRows(){document.querySelectorAll('.rename-row-select').forEach(x=>x.checked=true);updateRenameBulkCount();}
+        function clearSelectedRenameRows(){document.querySelectorAll('.rename-row-select').forEach(x=>x.checked=false);const a=document.getElementById('renameSelectAll');if(a)a.checked=false;updateRenameBulkCount();}
+        async function downloadSelectedRename(){const idx=Array.from(document.querySelectorAll('.rename-row-select')).filter(x=>x.checked).map(x=>Number(x.dataset.index));if(!idx.length)return;const zip=new JSZip();for(const i of idx){const item=renamedMappingResults[i];if(!item?.fileRef)continue;await new Promise(resolve=>{const r=new FileReader();r.onload=e=>{zip.file(item.targetName||item.originalName,e.target.result);resolve();};r.onerror=resolve;r.readAsArrayBuffer(item.fileRef);});}const blob=await zip.generateAsync({type:'blob'});downloadBlob(blob,`Batch_Renamed_Selected_${Date.now()}.zip`);showToast(`ดาวน์โหลด ${idx.length} ไฟล์ที่เลือกแล้ว`,'success');}
+        
+        function downloadDataUrl(url,name){ if(!url)return; const a=document.createElement('a');a.href=url;a.download=name;a.click(); }
+        function csvEscape(v){ return `"${String(v??'').replace(/"/g,'""')}"`; }
+        function reportRows(kind){
+            if(kind==='encode') return encodeResults.map(x=>({name:x.name,status:x.base64?'Success':'Error',size:x.sizeLabel,type:x.typeLabel,dimension:x.dimensionLabel,error:x.error||''}));
+            if(kind==='rename') return renamedMappingResults.map(x=>({name:x.originalName,target:x.targetName,status:x.isMatched?'Matched':'Keep Original',size:x.fileRef?.size||0}));
+            if(kind==='decode') return (galleryItemsStore.imageGallery||[]).map(x=>({name:x.name,status:'Success',size:Math.round((x.dataUrl.length*3)/4)}));
+            if(kind==='paste') return (galleryItemsStore.pasteGallery||[]).map(x=>({name:x.name,status:'Success',size:Math.round((x.dataUrl.length*3)/4)}));
+            if(kind==='pdf') return (galleryItemsStore.pdfGallery||[]).map(x=>({name:x.name,status:'Success'}));
+            if(kind==='sim') return simExtractedImages.map(x=>({name:x.fileName||x.name,status:'Success',size:x.data?.length||0}));
+            return [];
+        }
+        function exportResultReport(kind,format){ const rows=reportRows(kind); if(!rows.length){showToast('ยังไม่มีข้อมูลสำหรับ Export','warning');return;} const stamp=Date.now(); if(format==='json'){downloadBlob(new Blob([JSON.stringify({tool:kind,exportedAt:new Date().toISOString(),total:rows.length,results:rows},null,2)],{type:'application/json'}),`${kind}_Report_${stamp}.json`);}else{const keys=Object.keys(rows[0]);const csv=[keys.map(csvEscape).join(','),...rows.map(r=>keys.map(k=>csvEscape(r[k])).join(','))].join('\r\n');downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),`${kind}_Report_${stamp}.csv`);} showToast(`Export ${format.toUpperCase()} สำเร็จ ${rows.length} รายการ`,'success'); }
+        function exportCurrentReport(format){ exportResultReport(currentTab.replace('-tab',''),format); }
+
+        function savePdfPreferences(){ localStorage.setItem('imageToolkitPdfPrefs',JSON.stringify({format:document.getElementById('pdfOutputFormat')?.value,scale:document.getElementById('pdfScale')?.value})); }
+        function restorePdfPreferences(){ try{const p=JSON.parse(localStorage.getItem('imageToolkitPdfPrefs')||'null');if(p?.format&&document.getElementById('pdfOutputFormat'))document.getElementById('pdfOutputFormat').value=p.format;if(p?.scale&&document.getElementById('pdfScale'))document.getElementById('pdfScale').value=p.scale;}catch(e){} }
+        function installKeyboardShortcuts(){ document.addEventListener('keydown',e=>{if(!(e.ctrlKey&&e.key==='Enter'))return;if(e.target.matches('input,select,textarea') && e.target.id==='pasteBase64Input'){} e.preventDefault(); const actions={'decode-tab':parseAndDecode,'rename-tab':processRenameMapping,'encode-tab':convertImagesToBase64,'paste-tab':convertPastedBase64,'decodesim-tab':processSimData,'pdf-tab':convertPdfToImages}; const fn=actions[currentTab];if(typeof fn==='function'){fn();showToast('Ctrl+Enter → เริ่มประมวลผล','info',{duration:1800});}}); }
+        function addRetryButton(sectionId,kind){ const section=document.getElementById(sectionId);if(!section||section.querySelector(`[data-retry="${kind}"]`))return; const host=section.querySelector('.flex.flex-col.sm\\:flex-row')||section.querySelector('h3')?.parentElement; if(!host)return; const b=document.createElement('button');b.type='button';b.dataset.retry=kind;b.className='px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 rounded-md text-xs font-semibold';b.innerHTML='<i class="fa-solid fa-rotate-right"></i> Retry Failed Only';b.onclick=()=>retryFailedOnly(kind);host.appendChild(b); }
+        function updateRetryButtons(){ ['decode','encode','paste','pdf'].forEach(k=>{const b=document.querySelector(`[data-retry="${k}"]`);if(b)b.disabled=!failedQueues[k].length;b?.classList.toggle('opacity-40',!failedQueues[k].length);}); }
+        async function retryDecodeJobs(jobs){
+            if(!jobs.length)return;
+            const map=getDecodeMapping(); let recovered=0; const total=jobs.length; startProcessingProgress('Retry Decode Failed Only',0,total,'Retrying failed records…');
+            for(let i=0;i<jobs.length;i++){
+                const job=jobs[i]; let ok=false;
+                try{
+                    if(!job.mobile || !job.data) throw new Error('Missing MobileNo/eApp data');
+                    const cleaned=cleanBase64(job.data); if(!cleaned) throw new Error('Bad Base64');
+                    const ft=detectFileType(cleaned); let dims=null; try{dims=getImageDimensions(base64ToBytes(cleaned),ft.ext);}catch(e){}
+                    const dim=(dims&&dims.width&&dims.height)?`${dims.width}x${dims.height}px`:'N/A'; const orig=`${job.mobile}.${ft.ext}`; let path=map[`${job.mobile}.jpg`]||map[orig]||map[job.mobile]||`output_eApp_images/${orig}`; if(path.startsWith('/'))path=path.substring(1);
+                    let finalPath=path;let n=1;while(decodedFileNames.has(finalPath)){const d=finalPath.lastIndexOf('.');finalPath=d>-1?`${finalPath.slice(0,d)}_retry${n}${finalPath.slice(d)}`:`${finalPath}_retry${n}`;n++;}
+                    decodedFileNames.add(finalPath);const name=finalPath.split('/').pop()||finalPath;decodeZip.file(finalPath,cleaned,{base64:true});decodedFilesMap[finalPath]=cleaned;appendDecodedCard(name,finalPath,cleaned,false,!!(map[`${job.mobile}.jpg`]||map[orig]||map[job.mobile]),ft,dim,imageGallery);decodeStats.error=Math.max(0,decodeStats.error-1);decodeStats.success++;ok=true;
+                }catch(e){failedQueues.decode.push(job);}
+                if(ok)recovered++;setProcessingProgress('Retry Decode Failed Only',i+1,total,`${job.mobile||'record'} · ${ok?'Recovered':'Still failed'}`);updateDecodeStatsUI();
+            }
+            filterResults('imageGallery','decodeResultSearch','decodeFilterCount');updateRetryButtons();updateBulkCounts();finishProcessingProgress(`Retry complete · ${recovered}/${total} recovered`);showToast(recovered===total?'Retry Decode สำเร็จทั้งหมด':`Retry Decode สำเร็จ ${recovered}/${total} รายการ`,recovered===total?'success':'warning');
+        }
+
+        function retryFailedOnly(kind){
+            if(kind==='encode'){ const jobs=[...failedQueues.encode]; if(!jobs.length)return; showToast(`Retry ${jobs.length} Encode item(s)`,'info'); failedQueues.encode=[]; (async()=>{for(let i=0;i<jobs.length;i++){const file=jobs[i];try{const base64=await readFileAsBase64(file),ft=detectFileType(base64);encodeResults=encodeResults.filter(x=>x.name!==file.name);encodeResults.push({name:file.name,base64,mime:ft.mime,ext:ft.ext,typeLabel:ft.label,sizeLabel:formatFileSize(file.size),dimensionLabel:'N/A'});}catch(e){failedQueues.encode.push(file);}}renderEncodeResults();filterResults('encodeResultsList','encodeResultSearch','encodeFilterCount');updateBulkCounts();updateRetryButtons();focusResultZone('encodeResultsSection');})();return; }
+            if(kind==='paste'){ const jobs=[...failedQueues.paste]; if(!jobs.length)return; failedQueues.paste=[]; const beforeErr=pasteStats.error; showToast(`Retry ${jobs.length} Base64 item(s)`,'info'); const old=pasteBase64Input.value;pasteBase64Input.value=jobs.map(x=>(x.name?`${x.name}=`:'')+x.rawBase64).join('\n'); const beforeSuccess=pasteStats.success; convertPastedBase64(); pasteBase64Input.value=old; const recovered=Math.max(0,pasteStats.success-beforeSuccess); pasteStats.error=Math.max(0,beforeErr-recovered); updatePasteStatsUI(); updateRetryButtons(); return; }
+            if(kind==='decode'){ const jobs=[...failedQueues.decode]; if(!jobs.length)return; failedQueues.decode=[]; retryDecodeJobs(jobs); return; }
+            if(kind==='pdf'){ showToast('PDF Retry จะประมวลผลเฉพาะหน้า/ไฟล์ที่ล้มเหลวในการรอบล่าสุด','info'); const jobs=[...failedQueues.pdf];failedQueues.pdf=[]; retryPdfJobs(jobs); }
+        }
+        async function retryPdfJobs(jobs){ if(!jobs.length)return; const fmt=document.getElementById('pdfOutputFormat').value,scale=parseFloat(document.getElementById('pdfScale').value)||2,mime=fmt==='jpeg'?'image/jpeg':'image/png',quality=fmt==='jpeg'?0.92:undefined;startProcessingProgress('Retry PDF Failed Only',jobs.length);for(let i=0;i<jobs.length;i++){const j=jobs[i];try{const page=await j.pdfDoc.getPage(j.pageNum),vp=page.getViewport({scale}),canvas=document.createElement('canvas');canvas.width=vp.width;canvas.height=vp.height;const ctx=canvas.getContext('2d');if(fmt==='jpeg'){ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);}await page.render({canvasContext:ctx,viewport:vp}).promise;const b64=await canvasToBase64(canvas,mime,quality),ext=fmt==='jpeg'?'jpg':'png',name=`${j.baseName}_page${String(j.pageNum).padStart(3,'0')}.${ext}`;pdfZip.file(name,b64,{base64:true});appendDecodedCard(name,name,b64,false,false,{ext,mime,label:fmt.toUpperCase()},`${Math.round(vp.width)}x${Math.round(vp.height)}px`,pdfGallery);pdfStats.success++;pdfStats.error=Math.max(0,pdfStats.error-1);}catch(e){failedQueues.pdf.push(j);}setProcessingProgress('Retry PDF Failed Only',i+1,jobs.length,`${j.fileName} · page ${j.pageNum}`);updatePdfStatsUI();}filterResults('pdfGallery','pdfResultSearch','pdfFilterCount');updateRetryButtons();updateBulkCounts();finishProcessingProgress('Retry complete');if(failedQueues.pdf.length)showToast(`ยัง Error ${failedQueues.pdf.length} รายการ`,'warning');else showToast('Retry PDF สำเร็จทั้งหมด','success');}
+
+        // ==================== INTERACTIVE UX ENHANCEMENTS ====================
+        function animateStat(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('stat-animate');
+            void el.offsetWidth;
+            el.classList.add('stat-animate');
+        }
+
+        function setAnimatedText(id, value) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const next = String(value ?? 0);
+            if (el.textContent !== next) {
+                el.textContent = next;
+                animateStat(id);
+            }
+        }
+
+        function focusResultZone(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            setTimeout(() => {
+                el.classList.remove('result-focus');
+                void el.offsetWidth;
+                el.classList.add('result-focus');
+                el.scrollIntoView({ behavior:'smooth', block:'start' });
+                setTimeout(() => el.classList.remove('result-focus'), 1400);
+            }, 100);
+        }
+
+        function filterResults(containerId, searchId, countId) {
+            const container = document.getElementById(containerId);
+            const input = document.getElementById(searchId);
+            const count = document.getElementById(countId);
+            if (!container || !input) return;
+            const q = input.value.trim().toLowerCase();
+            const cards = Array.from(container.children).filter(el => !el.classList.contains('col-span-full'));
+            let visible = 0;
+            cards.forEach(card => {
+                const haystack = (card.dataset.searchName || card.textContent || '').toLowerCase();
+                const match = !q || haystack.includes(q);
+                card.classList.toggle('hidden', !match);
+                if (match) visible++;
+            });
+            if (count) count.textContent = `${visible} result${visible === 1 ? '' : 's'}`;
+            updateBulkCounts();
+        }
+
+        function filterRenameTable() {
+            const input = document.getElementById('renameResultSearch');
+            const body = document.getElementById('renameTableBody');
+            const count = document.getElementById('renameFilterCount');
+            if (!input || !body) return;
+            const q = input.value.trim().toLowerCase();
+            const rows = Array.from(body.querySelectorAll('tr')).filter(row => row.querySelectorAll('td').length >= 4);
+            let visible = 0;
+            rows.forEach(row => {
+                const match = !q || row.textContent.toLowerCase().includes(q);
+                row.classList.toggle('hidden', !match);
+                if (match) visible++;
+            });
+            if (count) count.textContent = `${visible} file${visible === 1 ? '' : 's'}`;
+            updateRenameBulkCount();
+        }
+
+        function updateRenameSummary(matched, total) {
+            matched = Number(matched) || 0;
+            total = Number(total) || 0;
+            const pct = total ? Math.round((matched / total) * 100) : 0;
+            setAnimatedText('renameMatchedCount', matched);
+            setAnimatedText('renameTotalCount', total);
+            setAnimatedText('renameUnmatchedCount', Math.max(0, total - matched));
+            const bar = document.getElementById('renameProgressBar');
+            if (bar) bar.style.width = `${pct}%`;
+            const label = document.getElementById('renameProgressLabel');
+            if (label) label.textContent = total ? `${pct}% matched` : 'Waiting for mapping...';
+            const count = document.getElementById('renameFilterCount');
+            if (count && !document.getElementById('renameResultSearch')?.value) count.textContent = `${total} file${total === 1 ? '' : 's'}`;
+        }
+
+        function formatDroppedNames(files, max=3) {
+            const names = files.slice(0,max).map(f => f.name);
+            if (files.length > max) names.push(`+${files.length-max} more`);
+            return names.join(', ');
+        }
+
+        function bindRealDropzone(dropId, inputId, options={}) {
+            const zone = document.getElementById(dropId);
+            const input = document.getElementById(inputId);
+            if (!zone || !input || zone.dataset.dndBound) return;
+            zone.dataset.dndBound = '1';
+            let dragDepth = 0;
+            const accept = options.accept || (() => true);
+            const countEl = options.countId ? document.getElementById(options.countId) : null;
+            const updateLabel = files => {
+                if (countEl) countEl.textContent = files.length ? `${files.length} file${files.length===1?'':'s'} ready · ${formatDroppedNames(files)}` : '';
+                if (options.labelId) {
+                    const label = document.getElementById(options.labelId);
+                    if (label && files.length) label.textContent = `${files.length} file${files.length===1?'':'s'} selected · click to replace`;
+                }
+            };
+            ['dragenter','dragover'].forEach(evt => zone.addEventListener(evt, e => {
+                e.preventDefault(); e.stopPropagation();
+                dragDepth++;
+                zone.classList.add('dropzone-active');
+            }));
+            ['dragleave'].forEach(evt => zone.addEventListener(evt, e => {
+                e.preventDefault(); e.stopPropagation();
+                dragDepth = Math.max(0, dragDepth-1);
+                if (!dragDepth) zone.classList.remove('dropzone-active');
+            }));
+            zone.addEventListener('drop', e => {
+                e.preventDefault(); e.stopPropagation();
+                dragDepth = 0; zone.classList.remove('dropzone-active');
+                const files = Array.from(e.dataTransfer.files || []).filter(accept);
+                if (!files.length) {
+                    showToast(options.invalidMessage || 'ไม่พบไฟล์ที่รองรับ', 'warning');
+                    return;
+                }
+                try {
+                    const dt = new DataTransfer();
+                    files.forEach(f => dt.items.add(f));
+                    input.files = dt.files;
+                } catch (_) { /* fallback: change handler still receives via custom event */ }
+                updateLabel(files);
+                input.dispatchEvent(new Event('change', {bubbles:true}));
+                showToast(options.message || `รับไฟล์แล้ว ${files.length} ไฟล์`, 'success');
+            });
+            input.addEventListener('change', () => updateLabel(Array.from(input.files || [])));
+        }
+
+        function initInteractiveEnhancements() {
+            restorePdfPreferences();
+            installKeyboardShortcuts();
+            bindRealDropzone('decode-dropzone','decodeFileInput',{
+                countId:'decodeDropzoneFileCount',
+                accept:f=>/\.txt$/i.test(f.name),
+                invalidMessage:'เมนู Decode รองรับไฟล์ .txt เท่านั้น',
+                message:'รับไฟล์ Decode แล้ว'
+            });
+            bindRealDropzone('rename-dropzone','renameFilesInput',{
+                countId:'renameDropzoneFileCount',
+                message:'รับไฟล์สำหรับ Rename แล้ว'
+            });
+            bindRealDropzone('encode-dropzone','encodeFilesInput',{
+                countId:'encodeDropzoneFileCount', labelId:'encodeDropzoneLabel',
+                accept:f=>f.type.startsWith('image/') || /\.(jpg|jpeg|png|gif|bmp|webp|tif|tiff)$/i.test(f.name),
+                invalidMessage:'เมนู Encode รองรับไฟล์รูปภาพเท่านั้น',
+                message:'รับไฟล์รูปภาพแล้ว'
+            });
+            bindRealDropzone('pdf-dropzone','pdfFilesInput',{
+                countId:'pdfDropzoneFileCount', labelId:'pdfDropzoneLabel',
+                accept:f=>f.type === 'application/pdf' || /\.pdf$/i.test(f.name),
+                invalidMessage:'เมนู PDF รองรับไฟล์ .pdf เท่านั้น',
+                message:'รับไฟล์ PDF แล้ว'
+            });
+            bindRealDropzone('sim-dropzone','simDropFileInput',{
+                countId:'simDropzoneFileCount',
+                accept:f=>/\.(txt|json|log)$/i.test(f.name),
+                invalidMessage:'เมนู ChgSIM รองรับไฟล์ .txt, .json, .log เท่านั้น',
+                message:'รับไฟล์ ChgSIM แล้ว'
+            });
+            document.getElementById('simDropFileInput')?.addEventListener('change', handleSimFileSelect);
+
+            [['imageGallery','decodeResultSearch','decodeFilterCount'],['encodeResultsList','encodeResultSearch','encodeFilterCount'],['pasteGallery','pasteResultSearch','pasteFilterCount'],['simImageGrid','simResultSearch','simFilterCount'],['pdfGallery','pdfResultSearch','pdfFilterCount']]
+                .forEach(([c,i,n]) => document.getElementById(i)?.addEventListener('input',()=>filterResults(c,i,n)));
+            document.getElementById('renameResultSearch')?.addEventListener('input', filterRenameTable);
+            ensureBulkUI(); addRetryButton('decodeResultsSection','decode'); addRetryButton('encodeResultsSection','encode'); addRetryButton('pasteResultsSection','paste'); addRetryButton('pdfResultsSection','pdf');
+            document.getElementById('pdfOutputFormat')?.addEventListener('change',savePdfPreferences); document.getElementById('pdfScale')?.addEventListener('change',savePdfPreferences);
+            document.getElementById('renameSelectAll')?.addEventListener('change',e=>{document.querySelectorAll('.rename-row-select').forEach(x=>x.checked=e.target.checked);updateRenameBulkCount();});
+        }
+
         // ==================== UTILITY FUNCTIONS ====================
+        const WORKSPACE_META = {
+            'decode-tab': {title:'Base64 → eApplication', desc:'แปลง Base64 พร้อมวิเคราะห์ชนิดไฟล์ จัด Mapping และดูผลลัพธ์แบบทันที', tool:'BASE64', sub:'decode / map / export'},
+            'rename-tab': {title:'Rename Files', desc:'จับคู่ชื่อไฟล์กับ Mapping และตรวจสอบผลลัพธ์ก่อนดาวน์โหลด ZIP', tool:'RENAME', sub:'mapping / review / export'},
+            'encode-tab': {title:'Image → Base64', desc:'แปลงรูปภาพเป็น Base64 แบบหลายไฟล์ พร้อม Copy และ Download ผลลัพธ์', tool:'ENCODE', sub:'images / base64 / export'},
+            'paste-tab': {title:'Base64 → Image', desc:'วาง Base64 หลายรายการ แปลงเป็นรูป และดู Preview พร้อมดาวน์โหลด', tool:'PASTE', sub:'paste / preview / export'},
+            'decodesim-tab': {title:'Base64 → Image (ChgSIM)', desc:'ถอดรูปจากข้อมูล ChgSIM พร้อมตรวจสอบชนิดไฟล์และผลลัพธ์', tool:'CHGSIM', sub:'extract / validate / export'},
+            'pdf-tab': {title:'PDF → Image', desc:'แปลง PDF เป็นภาพแบบหลายไฟล์ พร้อมดูจำนวนหน้าและดาวน์โหลด ZIP', tool:'PDF', sub:'render / preview / export'}
+        };
         function switchTab(tabId) {
             currentTab = tabId;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(tabId).classList.remove('hidden');
-
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
-                btn.classList.add('text-slate-400', 'hover:text-slate-200');
-            });
-
-            const activeBtn = document.getElementById(`btn-${tabId}`);
-            activeBtn.classList.remove('text-slate-400', 'hover:text-slate-200');
-            activeBtn.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+            const panel = document.getElementById(tabId); if(panel) panel.classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`nav-${tabId}`); if(activeBtn) activeBtn.classList.add('active');
+            const meta = WORKSPACE_META[tabId] || WORKSPACE_META['decode-tab'];
+            document.getElementById('workspaceTitle').textContent = meta.title;
+            document.getElementById('workspaceSubtitle').textContent = meta.sub;
+            document.getElementById('pageTitle').textContent = meta.title;
+            document.getElementById('pageDescription').textContent = meta.desc;
+            document.getElementById('kpiTool').textContent = meta.tool;
+            updateGlobalResults(tabId);
+            if(window.innerWidth <= 1024) toggleSidebar(false);
         }
+        function toggleSidebar(force) {
+            const sb=document.getElementById('appSidebar'), ov=document.getElementById('sidebarOverlay'), main=document.getElementById('appMain');
+            if(window.innerWidth <= 1024){ sb.classList.toggle('open', force===undefined ? !sb.classList.contains('open') : force); ov.classList.toggle('show', sb.classList.contains('open')); return; }
+            const collapsed=force===undefined ? !sb.classList.contains('collapsed') : force; sb.classList.toggle('collapsed',collapsed); main.classList.toggle('sidebar-collapsed',collapsed); document.getElementById('sidebarToggleIcon').className=collapsed?'fa-solid fa-angles-right':'fa-solid fa-angles-left';
+            localStorage.setItem('imageToolkitSidebarCollapsed', collapsed?'1':'0');
+        }
+        function updateGlobalResults(tabId=currentTab){
+            const map={
+                'decode-tab':()=>({processed:typeof decodeStats!=='undefined'?decodeStats.total:0,success:typeof decodeStats!=='undefined'?decodeStats.success:0,error:typeof decodeStats!=='undefined'?decodeStats.error:0,sub:'records / images'}),
+                'rename-tab':()=>({processed:typeof selectedRenameFiles!=='undefined'?selectedRenameFiles.length:0,success:typeof renamedMappingResults!=='undefined'?renamedMappingResults.filter(x=>x.isMatched).length:0,error:typeof selectedRenameFiles!=='undefined'&&typeof renamedMappingResults!=='undefined'?Math.max(0,selectedRenameFiles.length-renamedMappingResults.filter(x=>x.isMatched).length):0,sub:'files in review'}),
+                'encode-tab':()=>({processed:typeof encodeStats!=='undefined'?encodeStats.total:0,success:typeof encodeStats!=='undefined'?encodeStats.success:0,error:typeof encodeStats!=='undefined'?encodeStats.error:0,sub:'images / encoded'}),
+                'paste-tab':()=>({processed:typeof pasteStats!=='undefined'?pasteStats.total:0,success:typeof pasteStats!=='undefined'?pasteStats.success:0,error:typeof pasteStats!=='undefined'?pasteStats.error:0,sub:'pasted items'}),
+                'decodesim-tab':()=>({processed:typeof simExtractedImages!=='undefined'?simExtractedImages.length:0,success:typeof simExtractedImages!=='undefined'?simExtractedImages.length:0,error:0,sub:'extracted images'}),
+                'pdf-tab':()=>({processed:typeof pdfStats!=='undefined'?pdfStats.total:0,success:typeof pdfStats!=='undefined'?pdfStats.success:0,error:typeof pdfStats!=='undefined'?pdfStats.error:0,sub:'pages / images'})
+            };
+            try{const x=(map[tabId]||map['decode-tab'])();setAnimatedText('kpiProcessed',x.processed||0);setAnimatedText('kpiSuccess',x.success||0);setAnimatedText('kpiErrors',x.error||0);document.getElementById('kpiProcessedSub').textContent=x.sub;}catch(e){}
+        }
+        document.addEventListener('DOMContentLoaded',()=>{ if(localStorage.getItem('imageToolkitSidebarCollapsed')==='1' && window.innerWidth>1024) toggleSidebar(true); switchTab('decode-tab'); initInteractiveEnhancements(); installProgressWrappers(); filterResults('imageGallery','decodeResultSearch','decodeFilterCount'); filterResults('encodeResultsList','encodeResultSearch','encodeFilterCount'); filterResults('pasteGallery','pasteResultSearch','pasteFilterCount'); filterResults('simImageGrid','simResultSearch','simFilterCount'); filterResults('pdfGallery','pdfResultSearch','pdfFilterCount'); filterRenameTable(); updateBulkCounts(); updateRenameBulkCount(); setInterval(()=>{updateGlobalResults();updateBulkCounts();updateRenameBulkCount();updateRetryButtons();},700); });
 
         // ==================== TAB 1: DECODE BASE64 ENGINE ====================
         const decodeFileInput = document.getElementById('decodeFileInput');
@@ -1012,10 +1499,10 @@
         }
 
         function updateDecodeStatsUI() {
-            document.getElementById('dec-total').textContent = decodeStats.total;
-            document.getElementById('dec-success').textContent = decodeStats.success;
-            document.getElementById('dec-duplicate').textContent = decodeStats.duplicate;
-            document.getElementById('dec-error').textContent = decodeStats.error;
+            setAnimatedText('dec-total', decodeStats.total);
+            setAnimatedText('dec-success', decodeStats.success);
+            setAnimatedText('dec-duplicate', decodeStats.duplicate);
+            setAnimatedText('dec-error', decodeStats.error);
             document.getElementById('galleryCount').textContent = Object.keys(decodedFilesMap).length;
         }
 
@@ -1177,6 +1664,8 @@
         }
 
         function parseAndDecode() {
+            startProcessingProgress('Decode Base64', Math.max(1,(currentDecodeLines||[]).filter(x=>/^mobile\s*No\s*:/i.test(x.trim())).length), 'Preparing records…');
+            failedQueues.decode=[];
             // Reset States
             decodeZip = new JSZip();
             decodeStats = { total: 0, success: 0, duplicate: 0, error: 0 };
@@ -1210,15 +1699,15 @@
 
                 if (!trimmedMobile) {
                     appendDecodeLog(`Record #${decodeStats.total} : Unknown -> Fail (No MobileNo)`, 'error');
-                    decodeStats.error++;
+                    decodeStats.error++; failedQueues.decode.push({mobile:trimmedMobile,data:eAppAccum});
                 } else if (!eAppAccum.trim()) {
                     appendDecodeLog(`Record #${decodeStats.total} : ${trimmedMobile} -> Fail (No Data eApp)`, 'error');
-                    decodeStats.error++;
+                    decodeStats.error++; failedQueues.decode.push({mobile:trimmedMobile,data:''});
                 } else {
                     let cleanedB64 = cleanBase64(eAppAccum);
                     if (!cleanedB64) {
                         appendDecodeLog(`Record #${decodeStats.total} : ${trimmedMobile} -> Fail (Bad Base64)`, 'error');
-                        decodeStats.error++;
+                        decodeStats.error++; failedQueues.decode.push({mobile:trimmedMobile,data:eAppAccum});
                     } else {
                         // ตรวจชนิดไฟล์จริงจาก Magic Bytes ก่อนตั้งชื่อ/นามสกุล
                         let fileType = detectFileType(cleanedB64);
@@ -1290,7 +1779,7 @@
                             }
                         } catch(err) {
                             appendDecodeLog(`${trimmedMobile} : Decode Fails (${err.message})`, 'error');
-                            decodeStats.error++;
+                            decodeStats.error++; failedQueues.decode.push({mobile:trimmedMobile,data:eAppAccum});
                         }
                     }
                 }
@@ -1343,10 +1832,15 @@
             appendDecodeLog(`Duplicate Found : ${decodeStats.duplicate}`, 'duplicate');
             appendDecodeLog(`Errors : ${decodeStats.error}`, 'error');
 
+            updateGlobalResults('decode-tab');
+            filterResults('imageGallery','decodeResultSearch','decodeFilterCount');
             if (decodeStats.success > 0 || decodeStats.duplicate > 0) {
+                focusResultZone('decodeResultsSection');
                 btnDownloadZip.removeAttribute('disabled');
                 btnDownloadZip.className = "w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white rounded-md font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-brand-500/20";
             }
+            finishProcessingProgress(`Done · ${decodeStats.success} success / ${decodeStats.error} error`);
+            updateRetryButtons();
         }
 
         // นำการ์ดรูปภาพใส่เข้ามาใน Gallery พร้อม Tooltip แสดง Path (ใช้ร่วมกันทั้ง Tab Decode และ Tab Paste Base64)
@@ -1362,8 +1856,10 @@
             const isPreviewable = fileType.mime.startsWith('image/') && fileType.ext !== 'tiff'; // เบราว์เซอร์ทั่วไปแสดงพรีวิว TIFF ไม่ได้
 
             const card = document.createElement('div');
-            card.className = `group bg-slate-950/40 border ${isDuplicate ? 'border-amber-500/50 hover:border-amber-400' : 'border-slate-800 hover:border-slate-700'} p-3 rounded-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30 flex flex-col justify-between relative`;
-            card.title = `${fullPath}\nDetected type: ${fileType.label}\nDimension: ${dimensionLabel}`; // Tooltip เมื่อนำเมาส์ไปชี้
+            card.className = `result-card-enter group bg-slate-950/40 border ${isDuplicate ? 'border-amber-500/50 hover:border-amber-400' : 'border-slate-800 hover:border-slate-700'} p-3 rounded-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30 flex flex-col justify-between relative`;
+            card.title = `${fullPath}\nDetected type: ${fileType.label}\nDimension: ${dimensionLabel}`;
+            card.dataset.searchName = `${displayFileName} ${fullPath}`.toLowerCase();
+            card.style.animationDelay = `${Math.min((targetGallery.children.length || 0) * 45, 600)}ms`; // Tooltip เมื่อนำเมาส์ไปชี้
 
             const imgWrapper = document.createElement('div');
             imgWrapper.className = "w-full aspect-square bg-slate-950 rounded-lg overflow-hidden flex items-center justify-center relative mb-2.5";
@@ -1451,8 +1947,11 @@
             card.appendChild(imgWrapper);
             card.appendChild(footer);
             card.appendChild(actionBtn);
+            const cardDataUrl = dataUrl;
+            resultCheckbox(card, displayFileName, cardDataUrl);
 
             targetGallery.appendChild(card);
+            updateBulkCounts();
         }
 
         // โหลด Zip ของ Decode (จะรักษา Path ตาม Mapping เอาไว้ได้สมบูรณ์)
@@ -1480,7 +1979,9 @@
 
         renameFilesInput.addEventListener('change', function(e) {
             selectedRenameFiles = Array.from(e.target.files);
+            updateRenameSummary(0, selectedRenameFiles.length);
             renderRenameTable();
+            filterRenameTable();
         });
 
         function renderRenameTable() {
@@ -1489,9 +1990,10 @@
             btnDownloadRenameZip.className = "px-5 py-2.5 bg-slate-800 text-slate-500 rounded-md text-sm font-semibold flex items-center gap-2 transition-all cursor-not-allowed";
 
             if (selectedRenameFiles.length === 0) {
+                updateRenameSummary(0, 0);
                 renameTableBody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="py-12 text-center text-slate-500">
+                        <td colspan="5" class="py-12 text-center text-slate-500">
                             <i class="fa-solid fa-file-signature text-3xl mb-2 block opacity-30"></i>
                             ยังไม่ได้อัปโหลดไฟล์ต้นฉบับเพื่อแปลงชื่อ
                         </td>
@@ -1523,6 +2025,13 @@
                 tdStatus.className = "py-3 px-4 text-center";
                 tdStatus.innerHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400">Ready</span>`;
 
+                const tdSelect = document.createElement('td');
+                tdSelect.className = "py-3 px-4 text-center";
+                const rowCb = document.createElement('input');
+                rowCb.type='checkbox'; rowCb.className='bulk-row-select rename-row-select'; rowCb.dataset.index=index;
+                rowCb.addEventListener('change',()=>updateRenameBulkCount());
+                tdSelect.appendChild(rowCb);
+                tr.appendChild(tdSelect);
                 tr.appendChild(tdIndex);
                 tr.appendChild(tdOrig);
                 tr.appendChild(tdTarget);
@@ -1530,6 +2039,7 @@
 
                 renameTableBody.appendChild(tr);
             });
+            updateRenameBulkCount();
         }
 
         function processRenameMapping() {
@@ -1563,6 +2073,8 @@
 
             renamedMappingResults = [];
             let matchedCount = 0;
+            startProcessingProgress('Rename Files', selectedRenameFiles.length, 'Mapping filenames…');
+            updateRenameSummary(0, selectedRenameFiles.length);
 
             selectedRenameFiles.forEach((file, index) => {
                 const origName = file.name;
@@ -1595,13 +2107,22 @@
                         isMatched: false
                     });
                 }
+                // อัปเดต progress ทันทีหลังประมวลผลแต่ละไฟล์
+                updateRenameSummary(matchedCount, selectedRenameFiles.length);
+                setProcessingProgress('Rename Files', index+1, selectedRenameFiles.length, `${origName}`);
             });
+
+            updateRenameSummary(matchedCount, selectedRenameFiles.length);
+            filterRenameTable();
 
             if (renamedMappingResults.length > 0) {
                 btnDownloadRenameZip.removeAttribute('disabled');
                 btnDownloadRenameZip.className = "px-5 py-2.5 bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-sm font-semibold rounded-md flex items-center gap-2 transition-all shadow-lg shadow-brand-500/20";
+                focusResultZone('renameResultsSection');
                 showToast(`จับคู่สำเร็จ ${matchedCount} จากทั้งหมด ${selectedRenameFiles.length} ไฟล์ พร้อมส่งออกในรูปของ ZIP !`, 'success');
             }
+            finishProcessingProgress(`Done · ${matchedCount} matched / ${selectedRenameFiles.length-matchedCount} unmatched`);
+            updateRenameBulkCount();
         }
 
         function downloadRenameZip() {
@@ -1690,6 +2211,9 @@
 
         async function convertImagesToBase64() {
             if (selectedEncodeFiles.length === 0) return;
+            startProcessingProgress('Image → Base64', selectedEncodeFiles.length, 'Preparing files…');
+            failedQueues.encode=[];
+            const progressReader=window.readFileAsBase64; if(progressReader?._done!==undefined)progressReader._done=0;
 
             const originalBtnHtml = '<i class="fa-solid fa-bolt"></i> Convert to Base64';
             btnConvertEncode.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Converting...';
@@ -1732,14 +2256,18 @@
                         dimensionLabel: 'N/A',
                         error: err.message
                     });
+                    failedQueues.encode.push(file);
                 }
             }
 
             renderEncodeResults();
+            filterResults('encodeResultsList','encodeResultSearch','encodeFilterCount');
+            updateGlobalResults('encode-tab');
 
             btnConvertEncode.innerHTML = originalBtnHtml;
             btnConvertEncode.disabled = false;
 
+            if (encodeResults.length > 0) focusResultZone('encodeResultsSection');
             const hasResults = encodeResults.some(item => item.base64);
             if (hasResults) {
                 [btnCopyAllEncode, btnDownloadEncodeTxt].forEach(btn => {
@@ -1747,6 +2275,8 @@
                     btn.className = "px-5 py-2.5 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-100 text-sm font-semibold rounded-md flex items-center gap-2 transition-all";
                 });
             }
+            finishProcessingProgress(`Done · ${encodeResults.filter(x=>x.base64).length} success / ${failedQueues.encode.length} error`);
+            updateRetryButtons();
         }
 
         function renderEncodeResults() {
@@ -1766,7 +2296,9 @@
 
             encodeResults.forEach((item) => {
                 const card = document.createElement('div');
-                card.className = "bg-slate-900 border border-slate-800 rounded-lg p-5 flex flex-col md:flex-row gap-5";
+                card.className = "result-card-enter bg-slate-900 border border-slate-800 rounded-lg p-5 flex flex-col md:flex-row gap-5";
+                card.dataset.searchName = item.name.toLowerCase();
+                card.style.animationDelay = `${Math.min((encodeResultsList.children.length || 0) * 45, 600)}ms`;
 
                 // Thumbnail
                 const thumbWrapper = document.createElement('div');
@@ -1847,8 +2379,10 @@
                 card.appendChild(thumbWrapper);
                 card.appendChild(infoWrapper);
 
+                resultCheckbox(card, item.name, item.base64 ? `data:${item.mime};base64,${item.base64}` : '');
                 encodeResultsList.appendChild(card);
             });
+            updateBulkCounts();
         }
 
         // Copy ข้อความไปยัง Clipboard พร้อมแสดง Feedback ที่ปุ่ม
@@ -1925,9 +2459,10 @@
         }
 
         function updatePasteStatsUI() {
-            document.getElementById('paste-total').textContent = pasteStats.total;
-            document.getElementById('paste-success').textContent = pasteStats.success;
-            document.getElementById('paste-error').textContent = pasteStats.error;
+            if (processingUI.active && processingUI.label.startsWith('Base64')) setProcessingProgress('Base64 → Image', pasteStats.total, processingUI.total || pasteStats.total, `Item ${Math.max(0,pasteStats.total-(processingUI.pasteBase||0))}`);
+            setAnimatedText('paste-total', pasteStats.total);
+            setAnimatedText('paste-success', pasteStats.success);
+            setAnimatedText('paste-error', pasteStats.error);
             pasteGalleryCount.textContent = pasteUsedNames.size;
         }
 
@@ -1987,6 +2522,9 @@
             }
 
             appendPasteLog(`Processing ${entries.length} pasted item(s)...`, 'title');
+            startProcessingProgress('Base64 → Image', pasteStats.total + entries.length, 'Preparing Base64 items…');
+            processingUI.pasteBase = pasteStats.total;
+            failedQueues.paste=[];
 
             entries.forEach((entry, idx) => {
                 pasteStats.total++;
@@ -1996,6 +2534,7 @@
                 if (!cleaned) {
                     appendPasteLog(`${entry.name || autoName} : Fail (Base64 ว่างเปล่าหรือไม่ถูกต้อง)`, 'error');
                     pasteStats.error++;
+                    failedQueues.paste.push(entry);
                     updatePasteStatsUI();
                     return;
                 }
@@ -2041,6 +2580,7 @@
                 } catch (err) {
                     appendPasteLog(`${baseName} : Fail (${err.message})`, 'error');
                     pasteStats.error++;
+                    failedQueues.paste.push(entry);
                 }
 
                 updatePasteStatsUI();
@@ -2053,6 +2593,11 @@
 
             // เคลียร์กล่องข้อความหลัง Convert สำเร็จ เพื่อให้วางชุดถัดไปต่อได้ทันที
             pasteBase64Input.value = '';
+            filterResults('pasteGallery','pasteResultSearch','pasteFilterCount');
+            updateGlobalResults('paste-tab');
+            if (pasteStats.success > 0) focusResultZone('pasteResultsSection');
+            finishProcessingProgress(`Done · ${pasteStats.success} success / ${failedQueues.paste.length} error`);
+            updateRetryButtons();
         }
 
         function clearPasteAll() {
@@ -2171,6 +2716,7 @@
             }
 
             simExtractedImages = []; // Reset
+            startProcessingProgress('ChgSIM Decode', 3, 'Step 1/3 · Parsing structured data…');
 
             // Step A: พยายาม Parse แบบโครงสร้าง (JSON)
             try {
@@ -2196,18 +2742,25 @@
             } catch (error) {
                 console.log("Sim Decode: Standard Parse Failed, relying on Regex...");
             }
+            setProcessingProgress('ChgSIM Decode', 1, 3, 'Step 1/3 · Structured parse complete');
 
             // Step B: ใช้ Regex กวาดอีกรอบเสมอ (กันเหนียว)
             extractWithRegexSim(input);
+            setProcessingProgress('ChgSIM Decode', 2, 3, 'Step 2/3 · Regex extraction complete');
 
             // Step C: แสดงผล
             if (simExtractedImages.length > 0) {
                 displaySimImages();
                 showSimStatus(`สำเร็จ! Decode ได้ทั้งหมด ${simExtractedImages.length} Image`, 'success');
+                filterResults('simImageGrid','simResultSearch','simFilterCount');
+                updateGlobalResults('decodesim-tab');
+                focusResultZone('simOutputSection');
             } else {
                 showSimStatus('ไม่พบข้อมูล Image (ไม่มี Buffer หรือ Array ตัวเลขที่ตรงกับ Image)', 'warning');
                 document.getElementById('simOutputSection').classList.add('hidden');
             }
+            setProcessingProgress('ChgSIM Decode', 3, 3, `Step 3/3 · ${simExtractedImages.length} image(s) extracted`);
+            finishProcessingProgress(simExtractedImages.length ? `Done · ${simExtractedImages.length} images` : 'Done · no images found');
         }
 
         // จัดการไฟล์ที่อัปโหลด
@@ -2235,7 +2788,8 @@
 
             imageGrid.innerHTML = '';
             outputSection.classList.remove('hidden');
-            imgCount.textContent = simExtractedImages.length;
+            setAnimatedText('simImgCount', simExtractedImages.length);
+            setAnimatedText('simImgCountTitle', simExtractedImages.length);
             resetGalleryItems('simImageGrid');
 
             downloadAllBtn.classList.toggle('hidden', simExtractedImages.length <= 1);
@@ -2254,7 +2808,9 @@
                 const itemIndex = pushGalleryItem('simImageGrid', { name: fileName, dataUrl: blobUrl });
 
                 const card = document.createElement('div');
-                card.className = 'bg-slate-900 border border-slate-800 rounded-lg overflow-hidden flex flex-col group';
+                card.className = 'result-card-enter bg-slate-900 border border-slate-800 rounded-lg overflow-hidden flex flex-col group';
+                card.dataset.searchName = fileName.toLowerCase();
+                card.style.animationDelay = `${Math.min(index * 45, 600)}ms`;
 
                 card.innerHTML = `
                     <div class="w-full aspect-square bg-slate-950/80 flex items-center justify-center p-3 relative cursor-pointer" onclick="openLightbox('simImageGrid', ${itemIndex})">
@@ -2270,8 +2826,10 @@
                         <span class="text-[10px] px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">${(blob.size / 1024).toFixed(1)} KB</span>
                     </div>
                 `;
+                resultCheckbox(card, fileName, blobUrl);
                 imageGrid.appendChild(card);
             });
+            updateBulkCounts();
         }
 
         // แสดงสถานะ (Toast Notification)
@@ -2282,12 +2840,16 @@
         // ล้างค่า
         function clearSimAll() {
             document.getElementById('simJsonInput').value = '';
+            const simDropInput = document.getElementById('simDropFileInput'); if (simDropInput) simDropInput.value = '';
+            const simDropCount = document.getElementById('simDropzoneFileCount'); if (simDropCount) simDropCount.textContent = '';
             document.getElementById('simOutputSection').classList.add('hidden');
             document.getElementById('simImageGrid').innerHTML = '';
-            document.getElementById('simImgCount').textContent = '0';
+            setAnimatedText('simImgCount', 0);
+            setAnimatedText('simImgCountTitle', 0);
             document.getElementById('simDownloadAllBtn').classList.add('hidden');
             simExtractedImages = [];
             resetGalleryItems('simImageGrid');
+            updateGlobalResults('decodesim-tab');
         }
 
         // ดาวน์โหลดทั้งหมด
@@ -2363,10 +2925,11 @@
         }
 
         function updatePdfStatsUI() {
-            document.getElementById('pdf-files').textContent = pdfStats.files;
-            document.getElementById('pdf-total').textContent = pdfStats.total;
-            document.getElementById('pdf-success').textContent = pdfStats.success;
-            document.getElementById('pdf-error').textContent = pdfStats.error;
+            if (processingUI.active && processingUI.label.startsWith('PDF')) setProcessingProgress(processingUI.label, pdfStats.total, processingUI.total || pdfStats.total, `Page ${pdfStats.total}`);
+            setAnimatedText('pdf-files', pdfStats.files);
+            setAnimatedText('pdf-total', pdfStats.total);
+            setAnimatedText('pdf-success', pdfStats.success);
+            setAnimatedText('pdf-error', pdfStats.error);
             document.getElementById('pdfGalleryCount').textContent = pdfStats.success;
         }
 
@@ -2389,6 +2952,11 @@
 
         async function convertPdfToImages() {
             if (selectedPdfFiles.length === 0) return;
+            startProcessingProgress('PDF → Image', 0, 0, 'Reading PDF page counts…');
+            failedQueues.pdf=[];
+            const pdfDocCache=new Map(); let totalPagesEstimate=0;
+            for(const f of selectedPdfFiles){try{const ab=await f.arrayBuffer();const doc=await pdfjsLib.getDocument({data:ab}).promise;pdfDocCache.set(f,doc);totalPagesEstimate+=doc.numPages;}catch(e){}}
+            processingUI.total=totalPagesEstimate; setProcessingProgress('PDF → Image',0,totalPagesEstimate,`${selectedPdfFiles.length} PDF file(s) · ${totalPagesEstimate} pages`);
             if (!window['pdfjsLib']) {
                 showToast('ไม่สามารถโหลดไลบรารี PDF.js ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต', 'error');
                 return;
@@ -2421,8 +2989,7 @@
 
                 try {
                     const arrayBuffer = await file.arrayBuffer();
-                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-                    const pdfDoc = await loadingTask.promise;
+                    const pdfDoc = pdfDocCache.get(file) || await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                     const numPages = pdfDoc.numPages;
                     const baseName = file.name.replace(/\.pdf$/i, '');
 
@@ -2477,6 +3044,7 @@
                         } catch (pageErr) {
                             appendPdfLog(`${file.name} : Page ${pageNum} -> Fail (${pageErr.message})`, 'error');
                             pdfStats.error++;
+                            failedQueues.pdf.push({pdfDoc,pageNum,baseName,fileName:file.name});
                         }
                         updatePdfStatsUI();
                     }
@@ -2498,13 +3066,18 @@
             btnConvertPdf.innerHTML = originalBtnHtml;
             btnConvertPdf.disabled = false;
 
+            filterResults('pdfGallery','pdfResultSearch','pdfFilterCount');
+            updateGlobalResults('pdf-tab');
             if (pdfStats.success > 0) {
+                focusResultZone('pdfResultsSection');
                 btnDownloadPdfZip.removeAttribute('disabled');
                 btnDownloadPdfZip.className = "w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white rounded-md font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-brand-500/20";
                 showToast(`แปลงสำเร็จ ${pdfStats.success} หน้า จาก ${pdfStats.files} ไฟล์ PDF`, 'success');
             } else {
                 showToast('ไม่สามารถแปลง PDF เป็นรูปภาพได้ กรุณาตรวจสอบไฟล์อีกครั้ง', 'error');
             }
+            finishProcessingProgress(`Done · ${pdfStats.success} pages / ${pdfStats.error} errors`);
+            updateRetryButtons();
         }
 
         function downloadPdfZip() {
