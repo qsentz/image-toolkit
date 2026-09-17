@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Live Sales Monitoring Dashboard</title>
+<title>[TSMC] MYCHANNEL MONITORING DEVIESALE</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,6 +54,7 @@
     overflow-x:hidden;
     overflow-x:clip;
   }
+  /* film-grain noise overlay removed for a flatter, more minimal surface (kept out of body::before) */
   ::-webkit-scrollbar{width:5px; height:5px;}
   ::-webkit-scrollbar-thumb{background:var(--border); border-radius:5px;}
   ::-webkit-scrollbar-track{background:transparent;}
@@ -164,6 +165,9 @@
   .dash-content{
     position:relative; display:flex; flex-direction:column; gap:8px;
   }
+  /* Removed the sharp-cornered accent brackets that used to sit at the top-left /
+     bottom-right of each section — their hard right angles clashed with the
+     section's own rounded border and read as a broken/un-rounded corner. */
   .section-label{
     position:absolute; top:-9px; left:14px; background:var(--bg-2); color:var(--accent-bright);
     font-family:var(--font-serif); font-size:9.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
@@ -411,6 +415,8 @@
   }
 
   .rank-subcards{display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:10px;}
+  /* Decision 3: one brand color — card chrome no longer borrows --gold; --accent is the
+     only color reserved for "this is interactive / this is highlighted" cues site-wide. */
   .rank-subcard{border:1px solid var(--border); border-top:2px solid var(--border); border-radius:4px; padding:9px 10px; background:var(--surface-alt); min-width:0;}
   .rank-subcard.alt{border-top:2px solid var(--border);}
   .rank-subcard-head{display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:8px;}
@@ -534,6 +540,8 @@
   tbody tr:hover{background:var(--surface-alt);}
   .mono{font-family:ui-monospace,Menlo,monospace; color:var(--text);}
   .red-txt{color:var(--accent-bright); font-weight:700;}
+  /* Decision 5: alignment — numeric columns sit right, on a shared tabular-nums grid,
+     so counts stay "invisible" (scannable) instead of ragged-left. */
   .num, th.num, td.num{text-align:right;}
   .mono, .num, td.num, .rank-count, .grp-nums .n, .grp-nums .p, .hero-nums .big,
   .hero-substat .val, .tile .n, .tier-box .n, .legend-row .lg-val{
@@ -543,6 +551,10 @@
 
   .empty{color:var(--muted); font-size:11px; text-align:center; padding:12px 0;}
   .chart-wrap{position:relative; height:180px;}
+  /* Smooth scroll + a header shadow that only appears once scrolled — reads as
+     "header sits above the data" instead of the abrupt hard-edge cut a plain
+     sticky header gives you, and keeps the header's background fully opaque
+     (isolation:isolate stops any stacking-context bleed-through during scroll). */
   .table-scroll{overflow:auto; scroll-behavior:smooth; isolation:isolate; -webkit-overflow-scrolling:touch;}
   .table-scroll.is-scrolled th{box-shadow:0 1px 0 var(--border), 0 12px 16px -12px rgba(0,0,0,.55);}
   .table-scroll.tall{max-height:220px;}
@@ -555,6 +567,8 @@
     box-sizing:border-box; resize:none; align-self:center;
   }
   .track-filter-input::placeholder{color:var(--muted);}
+  /* Decision 4: keyboard — "the UI answers first". Small kbd chips make the existing
+     "/" and "R" shortcuts visible instead of hiding them in a title tooltip. */
   .track-filter-wrap{position:relative; flex:1 1 220px; min-width:220px; display:flex; align-items:center;}
   .track-filter-wrap .track-filter-input{flex:1 1 auto; padding-right:30px;}
   .kbd-hint{
@@ -579,6 +593,12 @@
   .track-table td, .track-table th{white-space:nowrap;}
   .track-table th.col-info, .track-table td.col-info{width:22px; padding-left:6px; padding-right:2px;}
   .track-table th.col-no, .track-table td.col-no{width:26px; color:var(--muted);}
+  /* Decision 7 (Responsive Table): the table owns the breakpoint. The tracking card
+     sizes columns off its own rendered width via a container query — not the page
+     viewport — since the same card can sit in a grid column or go fullscreen.
+     Decision 2: rank by use, not position — least-glanced columns hide first, but
+     nothing is deleted: the "i" expand button (col-info) still surfaces every
+     hidden field (see buildTrackTooltipHtml). */
   .track-card{container-type:inline-size; container-name:track-card;}
   @container track-card (max-width:640px){
     .track-table .col-ts, .track-table .col-prebook, .track-table .col-userid{display:none;}
@@ -655,11 +675,6 @@
   .hover-tip.show{display:block; animation:fadeInUp .12s ease both;}
 
 </style>
-
-<style id="senior-redesign-override">
-/* REDESIGN_VERSION: 2026-09-17-1205-jsonp */
-:root{color-scheme:dark;--bg:#070A12;--bg-2:#0B1020;--surface:rgba(17,24,39,.78);--surface-alt:rgba(31,41,55,.72);--border:rgba(148,163,184,.18);--border-soft:rgba(148,163,184,.12);--text:#F8FAFC;--text-dim:#CBD5E1;--muted:#64748B;--gold:#F59E0B;--gold-bg:rgba(245,158,11,.14);--stone:#94A3B8;--stone-bg:rgba(148,163,184,.14);--slate:#38BDF8;--slate-bg:rgba(56,189,248,.13);--green:#34D399;--green-bg:rgba(52,211,153,.14);--accent:#7C3AED;--accent-bright:#A78BFA;--accent-bg:rgba(124,58,237,.18);--on-accent:#fff;--radius:18px;--radius-sm:12px;--font-serif:'Bricolage Grotesque','IBM Plex Sans Thai',sans-serif;--font-sans:'IBM Plex Sans Thai',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}body{font-size:13px;background:radial-gradient(circle at top left,rgba(124,58,237,.32),transparent 34rem),radial-gradient(circle at 80% 5%,rgba(56,189,248,.22),transparent 30rem),linear-gradient(180deg,#07111f 0%,#070A12 48%,#05070c 100%);min-height:100%;}.topbar-wrap{background:linear-gradient(180deg,rgba(7,10,18,.92),rgba(7,10,18,.72));backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}.topbar{max-width:1440px;margin:auto;padding:18px 28px 14px}.topbar-title h1{font-size:clamp(22px,3vw,34px);letter-spacing:-.035em;text-transform:none;background:linear-gradient(135deg,#fff,#c4b5fd 45%,#7dd3fc);-webkit-background-clip:text;color:transparent}.sub{font-size:12px;color:#93a4b8}.live-chip{background:linear-gradient(135deg,#10b981,#84cc16);box-shadow:0 0 0 5px rgba(16,185,129,.12),0 0 28px rgba(16,185,129,.35);color:#03130c;border:0}.btn{height:40px;border-radius:999px;background:rgba(15,23,42,.72);border-color:rgba(148,163,184,.24);color:#e2e8f0;transition:.18s ease}.btn:hover{transform:translateY(-1px);border-color:rgba(167,139,250,.6);background:rgba(30,41,59,.86)}.btn.primary,.btn-refresh{background:linear-gradient(135deg,#7c3aed,#2563eb);border:0;color:white;box-shadow:0 12px 32px rgba(37,99,235,.28)}.refresh-track{height:3px;background:rgba(148,163,184,.08)}.refresh-bar{background:linear-gradient(90deg,#7c3aed,#38bdf8,#34d399)}.config{max-width:1440px;margin:0 auto 14px;border-radius:22px;background:rgba(15,23,42,.86);border:1px solid var(--border);box-shadow:0 24px 70px rgba(0,0,0,.28)}.field input{height:42px;border-radius:14px;background:rgba(2,6,23,.72);border:1px solid rgba(148,163,184,.22);color:#f8fafc}.wrap{max-width:1440px;padding:24px 28px 48px}.dash-section{border:1px solid rgba(148,163,184,.14);border-radius:28px;padding:18px;background:linear-gradient(180deg,rgba(15,23,42,.62),rgba(15,23,42,.34));box-shadow:0 28px 80px rgba(2,6,23,.34);overflow:hidden}.dash-section+.dash-section{margin-top:22px}.section-label{font-size:12px;letter-spacing:.14em;color:#93c5fd}.dash-content{gap:16px}.hero-row{gap:16px}.hero{border-radius:26px;background:linear-gradient(135deg,rgba(124,58,237,.24),rgba(15,23,42,.88) 40%,rgba(56,189,248,.16));border:1px solid rgba(167,139,250,.25);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 24px 50px rgba(2,6,23,.28);min-height:220px}.hero:before{content:'';position:absolute;inset:-2px;background:radial-gradient(circle at 25% 15%,rgba(255,255,255,.18),transparent 28%),radial-gradient(circle at 85% 20%,rgba(56,189,248,.24),transparent 32%);pointer-events:none}.hero-sticker{border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:#dbeafe}.big{font-size:clamp(44px,7vw,82px);letter-spacing:-.07em}.card,.rank-subcard,.summary-status-card{border-radius:24px;background:rgba(15,23,42,.74);border:1px solid rgba(148,163,184,.16);box-shadow:0 18px 50px rgba(2,6,23,.24);backdrop-filter:blur(12px)}.card:hover,.rank-subcard:hover{border-color:rgba(125,211,252,.34);transform:translateY(-2px);transition:.18s ease}.card h2{font-size:14px;text-transform:none;letter-spacing:.02em;color:#f8fafc}.h2-icon{color:#93c5fd}.tag,.badge{border-radius:999px;background:rgba(148,163,184,.13);border:1px solid rgba(148,163,184,.16);color:#cbd5e1}.soft{background:rgba(2,6,23,.38);border-radius:18px;border:1px solid rgba(148,163,184,.1)}.rank-row{border-radius:14px;padding:9px 10px;transition:.16s ease}.rank-row:hover{background:rgba(56,189,248,.08);transform:translateX(3px)}.rank-bar-fill{border-radius:999px;background:linear-gradient(90deg,#7c3aed,#38bdf8)!important}.grid-70-30,.grid-2,.grid-3{gap:16px}.track-toolbar{background:rgba(2,6,23,.28);border:1px solid rgba(148,163,184,.12);border-radius:18px;padding:10px}.track-filter-input{border-radius:14px;background:rgba(15,23,42,.9);border-color:rgba(148,163,184,.2);height:38px;color:#f8fafc}.track-table-scroll{border-radius:18px;border:1px solid rgba(148,163,184,.12);background:rgba(2,6,23,.26)}table{border-collapse:separate;border-spacing:0}th{background:rgba(15,23,42,.9)!important;color:#93c5fd!important;position:sticky;top:0}td,th{border-bottom:1px solid rgba(148,163,184,.1)!important;padding:10px!important}.fs-btn{border-radius:999px;background:rgba(15,23,42,.8);border:1px solid rgba(148,163,184,.22);color:#cbd5e1}.empty{border:1px dashed rgba(148,163,184,.3);border-radius:28px;background:rgba(15,23,42,.46);color:#cbd5e1}.chart-wrap{border-radius:18px}.status-dot.ok{background:#34d399;box-shadow:0 0 18px #34d399}.status-dot.err{background:#fb7185;box-shadow:0 0 18px #fb7185}@media(max-width:900px){.topbar,.wrap{padding-left:16px;padding-right:16px}.topbar{gap:14px}.topbar-right{width:100%;justify-content:space-between}.dash-section{padding:12px;border-radius:22px}.hero{min-height:auto}.grid-70-30,.grid-2,.grid-3,.hero-row{grid-template-columns:1fr!important}.rank-section{grid-template-columns:1fr!important}}
-</style>
 </head>
 <body>
 
@@ -667,7 +682,7 @@
   <div class="topbar">
     <div class="topbar-title-wrap">
       <div class="topbar-title">
-        <h1 id="dashTitle" title="ดับเบิลคลิกเพื่อตั้งค่า Google Sheet">Live Sales Monitoring Dashboard</h1>
+        <h1 id="dashTitle" title="ดับเบิลคลิกเพื่อตั้งค่า Google Sheet">[TSMC] MYCHANNEL MONITORING DEVIESALE</h1>
         <span class="live-chip">LIVE</span>
       </div>
       <div class="sub" id="rangeLabel">DISCONNECT</div>
@@ -872,36 +887,22 @@ function getSecretKey(){
   return el ? el.value.trim() : '';
 }
 
-function fetchSheet(sheetId, sheetName){
-  // Google Visualization endpoint often blocks fetch() on GitHub Pages by CORS.
-  // JSONP uses a temporary <script> callback, so it works as a live artifact on static hosting.
-  return new Promise((resolve, reject) => {
-    if (!sheetId) return reject(new Error('Missing Sheet ID'));
-    const callbackName = '__gviz_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-    const script = document.createElement('script');
-    const timer = setTimeout(() => cleanup(new Error('Google Sheet request timeout')), 20000);
-    function cleanup(err, payload){
-      clearTimeout(timer);
-      try { delete window[callbackName]; } catch(e) { window[callbackName] = undefined; }
-      if (script.parentNode) script.parentNode.removeChild(script);
-      if (err) reject(err); else resolve(payload);
-    }
-    window[callbackName] = (json) => {
-      try {
-        if (json.status && json.status !== 'ok'){
-          const detail = (json.errors && json.errors[0] && json.errors[0].detailed_message) || json.status;
-          throw new Error(detail);
-        }
-        const cols = (json.table.cols || []).map(c => (c.label || c.id || '').trim());
-        const rows = (json.table.rows || []).map(r => (r.c || []).map(cell => cell ? cell.v : null));
-        cleanup(null, {cols, rows});
-      } catch(e){ cleanup(e); }
-    };
-    script.onerror = () => cleanup(new Error('โหลด Google Sheet ไม่สำเร็จ — กรุณาตรวจว่า Sheet ถูก Share แบบ Anyone with the link หรือ Publish to web แล้ว'));
-    const base = 'https://docs.google.com/spreadsheets/d/' + encodeURIComponent(sheetId) + '/gviz/tq';
-    script.src = base + '?tqx=out:json;responseHandler:' + callbackName + '&sheet=' + encodeURIComponent(sheetName) + '&headers=1&_=' + Date.now();
-    document.head.appendChild(script);
-  });
+async function fetchSheet(sheetId, sheetName){
+  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&headers=1&_=${Date.now()}`;
+  const res = await fetch(url);
+  const text = await res.text();
+  const m = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
+  if (!m) {
+    throw new Error('อ่านข้อมูลจาก COLLECTION ไม่สำเร็จ (ตรวจสอบว่า DATA ID / ชื่อ COLLECTION)');
+  }
+  const json = JSON.parse(m[1]);
+  if (json.status === 'error') {
+    const detail = (json.errors && json.errors[0] && json.errors[0].detailed_message) || 'unknown error';
+    throw new Error('COLLECTION ส่ง ERROR กลับมา: ' + detail);
+  }
+  const cols = json.table.cols.map(c => (c.label || c.id || '').trim());
+  const rows = json.table.rows.map(r => (r.c || []).map(cell => cell ? cell.v : null));
+  return { cols, rows };
 }
 
 const LOCATION_MASTER_SHEET_NAME = 'LocationMaster';
@@ -1138,6 +1139,8 @@ function drawRing(canvasEl, pct, color, size){
   const from = canvasEl.dataset.pct ? parseFloat(canvasEl.dataset.pct) : 0;
   canvasEl.dataset.pct = target;
 
+  // Each call supersedes any animation loop (fill or idle glow) already
+  // running on this canvas, so refreshes never stack duplicate RAF loops.
   const token = (canvasEl._ringToken = (canvasEl._ringToken || 0) + 1);
 
   function paint(cur, glow){
@@ -1156,6 +1159,8 @@ function drawRing(canvasEl, pct, color, size){
     ctx.stroke();
     ctx.restore();
 
+    // Glowing tip dot that travels along the arc as it fills — a small
+    // "leading edge" marker instead of a flat cut-off end.
     if (cur > 0.5){
       const tipX = cx + r * Math.cos(endAngle);
       const tipY = cy + r * Math.sin(endAngle);
@@ -1179,7 +1184,7 @@ function drawRing(canvasEl, pct, color, size){
     function pulse(t){
       if (canvasEl._ringToken !== token) return;
       const phase = (t - t0) / 1000;
-      const glow = 8 + Math.sin(phase * 1.6) * 4;
+      const glow = 8 + Math.sin(phase * 1.6) * 4; // slow, gentle breathing glow
       paint(target, glow);
       requestAnimationFrame(pulse);
     }
@@ -1192,7 +1197,7 @@ function drawRing(canvasEl, pct, color, size){
     const p = Math.min(1, (t - start) / dur);
     const eased = 1 - Math.pow(1 - p, 3);
     const cur = from + (target - from) * eased;
-    const glow = 4 + eased * 10;
+    const glow = 4 + eased * 10; // glow builds in as the ring fills
     paint(cur, glow);
     if (p < 1){
       requestAnimationFrame(frame);
@@ -1457,6 +1462,8 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// Decision 4: keyboard-first shortcuts — "/" focuses the order-tracking filter,
+// "r" triggers a manual refresh. Both are ignored while typing in any field.
 document.addEventListener('keydown', e => {
   const tag = (e.target && e.target.tagName) || '';
   const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable);
@@ -1701,6 +1708,10 @@ function buildSkeleton(){
   initTableScrollFade();
 }
 
+// Sticky-header polish: smooth-scroll each data table, and once the user has
+// scrolled a table past its top edge, drop a soft shadow under the sticky
+// header instead of a hard cut — makes the header's edge read as "in front of"
+// the rows instead of the flicker/bleed-through look a plain sticky header has.
 function initTableScrollFade(){
   document.querySelectorAll('.table-scroll').forEach(el => {
     if (el.dataset.fadeBound) return;
