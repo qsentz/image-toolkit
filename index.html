@@ -54,7 +54,6 @@
     overflow-x:hidden;
     overflow-x:clip;
   }
-  /* film-grain noise overlay removed for a flatter, more minimal surface (kept out of body::before) */
   ::-webkit-scrollbar{width:5px; height:5px;}
   ::-webkit-scrollbar-thumb{background:var(--border); border-radius:5px;}
   ::-webkit-scrollbar-track{background:transparent;}
@@ -165,9 +164,6 @@
   .dash-content{
     position:relative; display:flex; flex-direction:column; gap:8px;
   }
-  /* Removed the sharp-cornered accent brackets that used to sit at the top-left /
-     bottom-right of each section — their hard right angles clashed with the
-     section's own rounded border and read as a broken/un-rounded corner. */
   .section-label{
     position:absolute; top:-9px; left:14px; background:var(--bg-2); color:var(--accent-bright);
     font-family:var(--font-serif); font-size:9.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
@@ -415,8 +411,6 @@
   }
 
   .rank-subcards{display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:10px;}
-  /* Decision 3: one brand color — card chrome no longer borrows --gold; --accent is the
-     only color reserved for "this is interactive / this is highlighted" cues site-wide. */
   .rank-subcard{border:1px solid var(--border); border-top:2px solid var(--border); border-radius:4px; padding:9px 10px; background:var(--surface-alt); min-width:0;}
   .rank-subcard.alt{border-top:2px solid var(--border);}
   .rank-subcard-head{display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:8px;}
@@ -540,8 +534,6 @@
   tbody tr:hover{background:var(--surface-alt);}
   .mono{font-family:ui-monospace,Menlo,monospace; color:var(--text);}
   .red-txt{color:var(--accent-bright); font-weight:700;}
-  /* Decision 5: alignment — numeric columns sit right, on a shared tabular-nums grid,
-     so counts stay "invisible" (scannable) instead of ragged-left. */
   .num, th.num, td.num{text-align:right;}
   .mono, .num, td.num, .rank-count, .grp-nums .n, .grp-nums .p, .hero-nums .big,
   .hero-substat .val, .tile .n, .tier-box .n, .legend-row .lg-val{
@@ -551,10 +543,6 @@
 
   .empty{color:var(--muted); font-size:11px; text-align:center; padding:12px 0;}
   .chart-wrap{position:relative; height:180px;}
-  /* Smooth scroll + a header shadow that only appears once scrolled — reads as
-     "header sits above the data" instead of the abrupt hard-edge cut a plain
-     sticky header gives you, and keeps the header's background fully opaque
-     (isolation:isolate stops any stacking-context bleed-through during scroll). */
   .table-scroll{overflow:auto; scroll-behavior:smooth; isolation:isolate; -webkit-overflow-scrolling:touch;}
   .table-scroll.is-scrolled th{box-shadow:0 1px 0 var(--border), 0 12px 16px -12px rgba(0,0,0,.55);}
   .table-scroll.tall{max-height:220px;}
@@ -567,8 +555,6 @@
     box-sizing:border-box; resize:none; align-self:center;
   }
   .track-filter-input::placeholder{color:var(--muted);}
-  /* Decision 4: keyboard — "the UI answers first". Small kbd chips make the existing
-     "/" and "R" shortcuts visible instead of hiding them in a title tooltip. */
   .track-filter-wrap{position:relative; flex:1 1 220px; min-width:220px; display:flex; align-items:center;}
   .track-filter-wrap .track-filter-input{flex:1 1 auto; padding-right:30px;}
   .kbd-hint{
@@ -593,12 +579,6 @@
   .track-table td, .track-table th{white-space:nowrap;}
   .track-table th.col-info, .track-table td.col-info{width:22px; padding-left:6px; padding-right:2px;}
   .track-table th.col-no, .track-table td.col-no{width:26px; color:var(--muted);}
-  /* Decision 7 (Responsive Table): the table owns the breakpoint. The tracking card
-     sizes columns off its own rendered width via a container query — not the page
-     viewport — since the same card can sit in a grid column or go fullscreen.
-     Decision 2: rank by use, not position — least-glanced columns hide first, but
-     nothing is deleted: the "i" expand button (col-info) still surfaces every
-     hidden field (see buildTrackTooltipHtml). */
   .track-card{container-type:inline-size; container-name:track-card;}
   @container track-card (max-width:640px){
     .track-table .col-ts, .track-table .col-prebook, .track-table .col-userid{display:none;}
@@ -675,6 +655,54 @@
   .hover-tip.show{display:block; animation:fadeInUp .12s ease both;}
 
 </style>
+
+<style id="ux-fix-20260917">
+/* UX fixes: no overlapping badges, smooth background, clipped glow */
+html{background:#070A12;}
+body{
+  min-height:100%;
+  background:
+    radial-gradient(900px 520px at 18% -8%, rgba(124,58,237,.30), rgba(124,58,237,.10) 38%, transparent 72%),
+    radial-gradient(980px 620px at 92% 8%, rgba(56,189,248,.22), rgba(56,189,248,.08) 42%, transparent 76%),
+    linear-gradient(180deg,#080C18 0%,#081222 18%,#07111F 42%,#07101D 66%,#070A12 100%) !important;
+  background-attachment:fixed,fixed,fixed;
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:-1;
+  background:
+    linear-gradient(180deg, rgba(124,58,237,.16) 0%, rgba(56,189,248,.08) 34%, rgba(7,10,18,0) 62%),
+    radial-gradient(1000px 760px at 0% 80%, rgba(124,58,237,.18), transparent 62%),
+    radial-gradient(980px 760px at 100% 72%, rgba(56,189,248,.16), transparent 64%);
+  opacity:.95;
+}
+.wrap,#dashboard{background:transparent!important;}
+.dash-section{overflow:visible; padding-top:28px; background:linear-gradient(180deg,rgba(15,23,42,.56),rgba(15,23,42,.30))!important;}
+.section-label{
+  top:-12px!important; left:18px!important; z-index:8;
+  border-radius:999px!important; padding:5px 13px 4px!important;
+  background:rgba(10,16,30,.96)!important;
+  box-shadow:0 8px 22px rgba(2,6,23,.32);
+}
+.hero{overflow:hidden; isolation:isolate; margin-top:2px; border-radius:24px!important; padding-top:34px!important;}
+.hero::after{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
+  background:radial-gradient(360px 220px at 100% 0%, rgba(56,189,248,.24), rgba(56,189,248,.08) 42%, transparent 76%);
+  clip-path:inset(0 round 24px);
+}
+.hero-left,.hero-right,.hero-sticker{position:relative; z-index:1;}
+.hero-sticker{
+  top:12px!important; left:22px!important; border-radius:999px!important;
+  padding:5px 13px 4px!important;
+  background:rgba(124,58,237,.82)!important;
+  border:1px solid rgba(196,181,253,.34)!important;
+  color:#F5F3FF!important;
+  box-shadow:0 10px 28px rgba(124,58,237,.24);
+}
+#trackingSection .section-label{color:#BAE6FD!important;}
+#trackingSection .card h2 .h2-title{font-size:14px; letter-spacing:.02em;}
+@media(max-width:900px){.dash-section{padding-top:30px}.hero{padding-top:40px!important}.section-label{left:14px!important}}
+</style>
+
 </head>
 <body>
 
@@ -1139,8 +1167,6 @@ function drawRing(canvasEl, pct, color, size){
   const from = canvasEl.dataset.pct ? parseFloat(canvasEl.dataset.pct) : 0;
   canvasEl.dataset.pct = target;
 
-  // Each call supersedes any animation loop (fill or idle glow) already
-  // running on this canvas, so refreshes never stack duplicate RAF loops.
   const token = (canvasEl._ringToken = (canvasEl._ringToken || 0) + 1);
 
   function paint(cur, glow){
@@ -1159,8 +1185,6 @@ function drawRing(canvasEl, pct, color, size){
     ctx.stroke();
     ctx.restore();
 
-    // Glowing tip dot that travels along the arc as it fills — a small
-    // "leading edge" marker instead of a flat cut-off end.
     if (cur > 0.5){
       const tipX = cx + r * Math.cos(endAngle);
       const tipY = cy + r * Math.sin(endAngle);
@@ -1184,7 +1208,7 @@ function drawRing(canvasEl, pct, color, size){
     function pulse(t){
       if (canvasEl._ringToken !== token) return;
       const phase = (t - t0) / 1000;
-      const glow = 8 + Math.sin(phase * 1.6) * 4; // slow, gentle breathing glow
+      const glow = 8 + Math.sin(phase * 1.6) * 4;
       paint(target, glow);
       requestAnimationFrame(pulse);
     }
@@ -1197,7 +1221,7 @@ function drawRing(canvasEl, pct, color, size){
     const p = Math.min(1, (t - start) / dur);
     const eased = 1 - Math.pow(1 - p, 3);
     const cur = from + (target - from) * eased;
-    const glow = 4 + eased * 10; // glow builds in as the ring fills
+    const glow = 4 + eased * 10;
     paint(cur, glow);
     if (p < 1){
       requestAnimationFrame(frame);
@@ -1462,8 +1486,6 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// Decision 4: keyboard-first shortcuts — "/" focuses the order-tracking filter,
-// "r" triggers a manual refresh. Both are ignored while typing in any field.
 document.addEventListener('keydown', e => {
   const tag = (e.target && e.target.tagName) || '';
   const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable);
@@ -1662,7 +1684,7 @@ function buildSkeleton(){
 
     <section class="dash-section" id="trackingSection">
       <button type="button" class="fs-btn" onclick="toggleFullscreen('trackingSection')" title="ขยายเต็มจอ">⛶</button>
-      <div class="section-label">Order Tracking</div>
+      <div class="section-label">Live Monitor</div>
     <div class="dash-content">
     <div class="card track-card">
       <h2><span class="h2-title"><svg class="h2-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>TRACKING ORDER</span> <span class="tag" id="tag-tracktotal"></span></h2>
@@ -1708,10 +1730,6 @@ function buildSkeleton(){
   initTableScrollFade();
 }
 
-// Sticky-header polish: smooth-scroll each data table, and once the user has
-// scrolled a table past its top edge, drop a soft shadow under the sticky
-// header instead of a hard cut — makes the header's edge read as "in front of"
-// the rows instead of the flicker/bleed-through look a plain sticky header has.
 function initTableScrollFade(){
   document.querySelectorAll('.table-scroll').forEach(el => {
     if (el.dataset.fadeBound) return;
