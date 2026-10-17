@@ -281,6 +281,31 @@
 .processing-progress{margin:0 0 18px;padding:12px 14px;border:1px solid #1a2032;background:rgba(8,10,20,.88);border-radius:11px;box-shadow:0 8px 30px rgba(0,0,0,.12)}
 .processing-progress.hidden{display:none}.progress-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px}.progress-title{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:#7b89a3;font-weight:700}.progress-value{font:700 12px 'IBM Plex Mono';color:#22d3ee}.progress-track{height:7px;background:#111827;border:1px solid #1f2937;border-radius:999px;overflow:hidden}.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#06b6d4,#22d3ee);box-shadow:0 0 14px rgba(34,211,238,.35);transition:width .18s ease}.progress-meta{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:10px;color:#52607a}.bulk-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px;padding:9px 10px;border:1px solid #1a2032;background:#0b0f1a;border-radius:9px}.bulk-toolbar .bulk-count{font:600 10px 'IBM Plex Mono';color:#71809b;margin-right:auto}.bulk-toolbar button{font-size:10px;padding:6px 9px;border-radius:7px}.bulk-toolbar button:disabled{opacity:.4;cursor:not-allowed}.result-select{position:absolute;top:8px;right:8px;width:17px;height:17px;accent-color:#06b6d4;z-index:4;cursor:pointer;filter:drop-shadow(0 0 4px rgba(6,182,212,.3))}.result-card-selected{border-color:rgba(34,211,238,.65)!important;box-shadow:0 0 0 1px rgba(34,211,238,.2),0 12px 30px rgba(6,182,212,.08)!important}.bulk-row-select{width:16px;height:16px;accent-color:#06b6d4;cursor:pointer}.report-actions{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto}.report-actions button{font-size:10px;padding:6px 9px;border-radius:7px}.mobile-compact{min-width:0}@media(max-width:640px){.processing-progress{position:sticky;top:57px;z-index:40}.bulk-toolbar{position:sticky;top:57px;z-index:39}.bulk-toolbar .bulk-count{width:100%;flex-basis:100%;margin-right:0}.report-actions{width:100%;margin-left:0}.result-search-wrap{flex-direction:column!important;align-items:stretch!important}.result-search-box{width:100%!important}.tab-content .grid{gap:12px}.tab-content .panel-marks{padding:14px}.tab-content button{min-height:40px}.app-main main{padding:12px}.page-hero{margin-bottom:12px}.dropzone-file-count{max-width:100%;word-break:break-word}}
 
+
+/* Base64 to PDF: scoped additions, preserving the existing dark workspace. */
+:root{--bpdf-primary:#0e7490;--bpdf-primary-hover:#155e75;--bpdf-on-primary:#ffffff;--bpdf-text:#dde3ec;--bpdf-muted:#9aa7bd;--bpdf-surface:#0e1220;--bpdf-input:#080a14;--bpdf-border:#525f79;--bpdf-focus:#22d3ee;--bpdf-error:#fda4af;--bpdf-space:16px;--bpdf-gap:12px;--bpdf-radius:8px;--bpdf-control:44px;--bpdf-preview:560px}
+#base64pdf-tab{color:var(--bpdf-text);min-inline-size:0}
+.bpdf-panel{background:var(--bpdf-surface);border:1px solid var(--bpdf-border);border-radius:var(--bpdf-radius);padding:var(--bpdf-space);min-inline-size:0}
+.bpdf-stack{display:grid;gap:var(--bpdf-gap);min-inline-size:0}
+.bpdf-help{color:var(--bpdf-muted);overflow-wrap:anywhere;line-height:1.6}
+.bpdf-input{inline-size:100%;min-inline-size:0;background:var(--bpdf-input);color:var(--bpdf-text);border:1px solid var(--bpdf-border);border-radius:var(--bpdf-radius);padding:var(--bpdf-gap);font:inherit}
+#base64PdfInput{min-block-size:calc(var(--bpdf-control)*5);resize:vertical;font-family:monospace;overflow-wrap:anywhere}
+.bpdf-actions{display:flex;flex-wrap:wrap;gap:var(--bpdf-gap);align-items:center}
+#base64pdf-tab button,#base64pdf-tab .bpdf-link{min-block-size:var(--bpdf-control);display:inline-flex;align-items:center;justify-content:center;padding-inline:var(--bpdf-space);border-radius:var(--bpdf-radius);text-decoration:none}
+#base64PdfConvert,#base64PdfDownload{background:var(--bpdf-primary);color:var(--bpdf-on-primary)}
+#base64PdfConvert:hover,#base64PdfDownload:hover{background:var(--bpdf-primary-hover)}
+.bpdf-secondary{border:1px solid var(--bpdf-border);background:var(--bpdf-input);color:var(--bpdf-text)}
+.bpdf-secondary:hover{background:var(--bpdf-surface)}
+#base64pdf-tab :is(input,textarea,button,a):focus-visible,#nav-base64pdf-tab:focus-visible{outline:2px solid var(--bpdf-focus);outline-offset:3px}
+#base64pdf-tab button:disabled{opacity:.55;cursor:wait}
+#base64PdfStatus[data-state="error"]{color:var(--bpdf-error)}
+#base64PdfPreview{inline-size:100%;block-size:var(--bpdf-preview);border:1px solid var(--bpdf-border);border-radius:var(--bpdf-radius);background:var(--bpdf-input)}
+#base64PdfResultName{overflow-wrap:anywhere}
+#base64pdf-tab [hidden]{display:none!important}
+.app-sidebar>.h-full{overflow-y:auto}
+@media(max-width:640px){#base64pdf-tab .bpdf-actions>*{flex:1 1 auto}.workspace-top .live-badge{display:none}}
+@media(prefers-reduced-motion:reduce){#base64pdf-tab *,#nav-base64pdf-tab{transition:none!important;animation:none!important}}
+
 </style>
 
 <style id="ui-overhaul">
@@ -393,6 +418,7 @@ body{overflow-x:hidden}
                 <button onclick="switchTab('paste-tab')" id="nav-paste-tab" data-tooltip="Base64 → Image" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-paste"></i></span><span class="nav-label min-w-0"><b class="block text-xs">Base64 → Image</b><small class="nav-meta text-[9px] text-slate-600">Paste & preview</small></span></button>
                 <button onclick="switchTab('decodesim-tab')" id="nav-decodesim-tab" data-tooltip="Base64 → Image (ChgSIM)" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-sim-card"></i></span><span class="nav-label min-w-0"><b class="block text-xs">Base64 → Image (ChgSIM)</b><small class="nav-meta text-[9px] text-slate-600">SIM image extraction</small></span></button>
                 <button onclick="switchTab('pdf-tab')" id="nav-pdf-tab" data-tooltip="PDF → Image" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-file-pdf"></i></span><span class="nav-label min-w-0"><b class="block text-xs">PDF → Image</b><small class="nav-meta text-[9px] text-slate-600">Render PDF pages</small></span></button>
+                <button onclick="switchTab('base64pdf-tab')" id="nav-base64pdf-tab" aria-label="Base64 to PDF" data-tooltip="Base64 → PDF" class="nav-item"><span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></span><span class="nav-label min-w-0"><b class="block text-xs">Base64 → PDF</b><small class="nav-meta text-[9px] text-slate-600">Convert, preview & download</small></span></button>
             </nav>
             <div class="mt-auto pt-4 border-t border-slate-800/80">
                 <button onclick="toggleSidebar()" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-200 hover:border-slate-700 transition-all" title="Collapse sidebar"><i class="fa-solid fa-angles-left" id="sidebarToggleIcon"></i><span class="nav-label text-[10px] font-semibold uppercase tracking-wider">Collapse Menu</span></button>
@@ -966,6 +992,35 @@ body{overflow-x:hidden}
             </div>
         </div>
 
+
+        <!-- Base64 to PDF: all decoding happens locally. -->
+        <section id="base64pdf-tab" class="tab-content space-y-6 hidden" aria-label="Base64 to PDF converter">
+            <div class="bpdf-panel bpdf-stack">
+                <h2 class="text-lg font-semibold">แปลง Base64 เป็น PDF</h2>
+                <p id="base64PdfHelp" class="bpdf-help text-sm">วางข้อมูล PDF หนึ่งไฟล์ รองรับ Base64 ดิบ หรือ data:application/pdf;base64,... รวมถึงข้อความที่มีการขึ้นบรรทัดใหม่ ข้อมูลที่วางจะไม่ถูกอัปโหลดไปยังเซิร์ฟเวอร์</p>
+                <label for="base64PdfInput" class="text-sm font-semibold">ข้อมูล Base64 ของ PDF</label>
+                <textarea id="base64PdfInput" class="bpdf-input" placeholder="JVBERi0xLjUK..." spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="base64PdfHelp base64PdfStatus"></textarea>
+                <label for="base64PdfFilename" class="text-sm font-semibold">ชื่อไฟล์ PDF</label>
+                <input id="base64PdfFilename" class="bpdf-input" type="text" value="document.pdf" maxlength="160" autocomplete="off">
+                <div class="bpdf-actions">
+                    <button id="base64PdfConvert" onclick="convertBase64ToPdf()" class="bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold">Convert to PDF</button>
+                    <button onclick="clearBase64Pdf()" class="bpdf-secondary text-sm">ล้างข้อมูล</button>
+                </div>
+                <p id="base64PdfStatus" class="bpdf-help text-sm" role="status" aria-live="polite" aria-atomic="true">พร้อมรับข้อมูล Base64</p>
+            </div>
+            <div id="base64PdfEmpty" class="bpdf-panel bpdf-help text-sm">ยังไม่มี PDF ให้แสดง วาง Base64 แล้วกด Convert to PDF เพื่อสร้างไฟล์</div>
+            <div id="base64PdfResult" class="bpdf-panel bpdf-stack" hidden>
+                <h3 class="text-lg font-semibold">ผลลัพธ์ PDF</h3>
+                <p id="base64PdfResultName" class="text-sm"></p>
+                <div class="bpdf-actions">
+                    <a id="base64PdfDownload" class="bpdf-link bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold">ดาวน์โหลด PDF</a>
+                    <a id="base64PdfOpen" class="bpdf-link bpdf-secondary text-sm" target="_blank" rel="noopener">เปิด PDF ในแท็บใหม่</a>
+                </div>
+                <p class="bpdf-help text-sm">หากเบราว์เซอร์ไม่แสดงตัวอย่าง ให้ดาวน์โหลดแล้วเปิดด้วยโปรแกรมอ่าน PDF</p>
+                <iframe id="base64PdfPreview" title="ตัวอย่าง PDF ที่แปลงจาก Base64"></iframe>
+            </div>
+        </section>
+
     </main>
     </div>
 
@@ -980,6 +1035,93 @@ body{overflow-x:hidden}
         if (window['pdfjsLib']) {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
+
+
+        // Base64 -> PDF. No upload, no persistence and no extra dependencies.
+        let base64PdfUrl = null;
+        let base64PdfStats = {processed:0,success:0,error:0};
+        function releaseBase64Pdf() {
+            document.getElementById('base64PdfPreview').removeAttribute('src');
+            ['base64PdfDownload','base64PdfOpen'].forEach(id=>document.getElementById(id).removeAttribute('href'));
+            if(base64PdfUrl) URL.revokeObjectURL(base64PdfUrl);
+            base64PdfUrl = null;
+            document.getElementById('base64PdfResult').hidden = true;
+            document.getElementById('base64PdfEmpty').hidden = false;
+        }
+        function setBase64PdfStatus(message, state='ready') {
+            const el=document.getElementById('base64PdfStatus');
+            el.textContent=message; el.dataset.state=state;
+        }
+        function clearBase64Pdf() {
+            releaseBase64Pdf();
+            document.getElementById('base64PdfInput').value='';
+            document.getElementById('base64PdfInput').removeAttribute('aria-invalid');
+            document.getElementById('base64PdfFilename').value='document.pdf';
+            base64PdfStats={processed:0,success:0,error:0};
+            setBase64PdfStatus('พร้อมรับข้อมูล Base64');
+            updateGlobalResults();
+            document.getElementById('base64PdfInput').focus();
+        }
+        function safeBase64PdfName() {
+            let name=document.getElementById('base64PdfFilename').value.trim().replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').replace(/[. ]+$/g,'');
+            if(!name) name='document';
+            if(!/\.pdf$/i.test(name)) name+='.pdf';
+            return name;
+        }
+        function convertBase64ToPdf() {
+            const input=document.getElementById('base64PdfInput');
+            releaseBase64Pdf();
+            input.removeAttribute('aria-invalid');
+            base64PdfStats={processed:1,success:0,error:0};
+            try {
+                let encoded=input.value.trim();
+                if(!encoded) throw new Error('กรุณาวางข้อมูล Base64 ของ PDF ก่อนแปลง');
+                // Limit before allocating the binary string and Uint8Array.
+                if(encoded.length>40*1024*1024) throw new Error('ข้อมูลยาวเกินขีดจำกัด 40 MiB กรุณาใช้ไฟล์ขนาดเล็กลง');
+                if(/^data:/i.test(encoded)) {
+                    const match=encoded.match(/^data:application\/pdf\s*;\s*base64\s*,([\s\S]*)$/i);
+                    if(!match) throw new Error('Data URL ต้องเป็น data:application/pdf;base64,...');
+                    encoded=match[1];
+                }
+                encoded=encoded.replace(/\s/g,'');
+                if(!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded) || encoded.length%4===1 || (encoded.includes('=') && encoded.length%4!==0)) {
+                    throw new Error('Base64 ไม่ถูกต้อง กรุณาคัดลอกข้อมูลให้ครบ โดยไม่รวมเครื่องหมายคำพูดหรือข้อความอื่น');
+                }
+                encoded=encoded.padEnd(Math.ceil(encoded.length/4)*4,'=');
+                let binary;
+                try { binary=atob(encoded); } catch { throw new Error('ถอดรหัส Base64 ไม่สำเร็จ กรุณาตรวจสอบข้อมูลอีกครั้ง'); }
+                if(!/^%PDF-\d\.\d/.test(binary.slice(0,8))) throw new Error('ข้อมูลนี้ไม่ใช่ PDF: ไม่พบส่วนหัว %PDF- กรุณาใช้ Base64 ของไฟล์ PDF');
+                const bytes=new Uint8Array(binary.length);
+                for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+                const blob=new Blob([bytes],{type:'application/pdf'});
+                base64PdfUrl=URL.createObjectURL(blob);
+                const name=safeBase64PdfName();
+                document.getElementById('base64PdfFilename').value=name;
+                document.getElementById('base64PdfResultName').textContent=`${name} • ${bytes.length.toLocaleString()} bytes`;
+                const download=document.getElementById('base64PdfDownload');
+                download.href=base64PdfUrl; download.download=name;
+                document.getElementById('base64PdfOpen').href=base64PdfUrl;
+                document.getElementById('base64PdfPreview').src=base64PdfUrl;
+                document.getElementById('base64PdfResult').hidden=false;
+                document.getElementById('base64PdfEmpty').hidden=true;
+                base64PdfStats.success=1;
+                setBase64PdfStatus('แปลงข้อมูลเป็นไฟล์ PDF แล้ว ตรวจพบส่วนหัว PDF แต่ยังไม่ได้ตรวจสอบโครงสร้างเอกสารทั้งหมด','success');
+            } catch(error) {
+                base64PdfStats.error=1;
+                input.setAttribute('aria-invalid','true');
+                setBase64PdfStatus(error.message,'error');
+            }
+            updateGlobalResults();
+        }
+        document.addEventListener('input',event=>{
+            if(event.target.id!=='base64PdfInput' && event.target.id!=='base64PdfFilename') return;
+            releaseBase64Pdf();
+            base64PdfStats={processed:0,success:0,error:0};
+            document.getElementById('base64PdfInput').removeAttribute('aria-invalid');
+            setBase64PdfStatus('ข้อมูลเปลี่ยนแล้ว กด Convert to PDF เพื่อสร้างไฟล์ใหม่');
+            updateGlobalResults();
+        });
+        window.addEventListener('pagehide',()=>{if(base64PdfUrl) URL.revokeObjectURL(base64PdfUrl);});
 
         // ==================== GLOBAL APP STATE ====================
         let currentTab = 'decode-tab';
@@ -1217,7 +1359,7 @@ body{overflow-x:hidden}
 
         function savePdfPreferences(){ localStorage.setItem('imageToolkitPdfPrefs',JSON.stringify({format:document.getElementById('pdfOutputFormat')?.value,scale:document.getElementById('pdfScale')?.value})); }
         function restorePdfPreferences(){ try{const p=JSON.parse(localStorage.getItem('imageToolkitPdfPrefs')||'null');if(p?.format&&document.getElementById('pdfOutputFormat'))document.getElementById('pdfOutputFormat').value=p.format;if(p?.scale&&document.getElementById('pdfScale'))document.getElementById('pdfScale').value=p.scale;}catch(e){} }
-        function installKeyboardShortcuts(){ document.addEventListener('keydown',e=>{if(!(e.ctrlKey&&e.key==='Enter'))return;if(e.target.matches('input,select,textarea') && e.target.id==='pasteBase64Input'){} e.preventDefault(); const actions={'decode-tab':parseAndDecode,'rename-tab':processRenameMapping,'encode-tab':convertImagesToBase64,'paste-tab':convertPastedBase64,'decodesim-tab':processSimData,'pdf-tab':convertPdfToImages}; const fn=actions[currentTab];if(typeof fn==='function'){fn();showToast('Ctrl+Enter → เริ่มประมวลผล','info',{duration:1800});}}); }
+        function installKeyboardShortcuts(){ document.addEventListener('keydown',e=>{if(!(e.ctrlKey&&e.key==='Enter'))return;if(e.target.matches('input,select,textarea') && e.target.id==='pasteBase64Input'){} e.preventDefault(); const actions={'base64pdf-tab':convertBase64ToPdf,'decode-tab':parseAndDecode,'rename-tab':processRenameMapping,'encode-tab':convertImagesToBase64,'paste-tab':convertPastedBase64,'decodesim-tab':processSimData,'pdf-tab':convertPdfToImages}; const fn=actions[currentTab];if(typeof fn==='function'){fn();showToast('Ctrl+Enter → เริ่มประมวลผล','info',{duration:1800});}}); }
         function addRetryButton(sectionId,kind){ const section=document.getElementById(sectionId);if(!section||section.querySelector(`[data-retry="${kind}"]`))return; const host=section.querySelector('.flex.flex-col.sm\\:flex-row')||section.querySelector('h3')?.parentElement; if(!host)return; const b=document.createElement('button');b.type='button';b.dataset.retry=kind;b.className='px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 rounded-md text-xs font-semibold';b.innerHTML='<i class="fa-solid fa-rotate-right"></i> Retry Failed Only';b.onclick=()=>retryFailedOnly(kind);host.appendChild(b); }
         function updateRetryButtons(){ ['decode','encode','paste','pdf'].forEach(k=>{const b=document.querySelector(`[data-retry="${k}"]`);if(b)b.disabled=!failedQueues[k].length;b?.classList.toggle('opacity-40',!failedQueues[k].length);}); }
         async function retryDecodeJobs(jobs){
@@ -1421,6 +1563,7 @@ body{overflow-x:hidden}
 
         // ==================== UTILITY FUNCTIONS ====================
         const WORKSPACE_META = {
+            'base64pdf-tab': {title:'Base64 → PDF', desc:'วาง Base64 เพื่อสร้างไฟล์ PDF ดูตัวอย่าง และดาวน์โหลด', tool:'B64 PDF', sub:'decode / preview / download'},
             'decode-tab': {title:'Base64 → eApplication', desc:'แปลง Base64 พร้อมวิเคราะห์ชนิดไฟล์ จัด Mapping และดูผลลัพธ์แบบทันที', tool:'BASE64', sub:'decode / map / export'},
             'rename-tab': {title:'Rename Files', desc:'จับคู่ชื่อไฟล์กับ Mapping และตรวจสอบผลลัพธ์ก่อนดาวน์โหลด ZIP', tool:'RENAME', sub:'mapping / review / export'},
             'encode-tab': {title:'Image → Base64', desc:'แปลงรูปภาพเป็น Base64 แบบหลายไฟล์ พร้อม Copy และ Download ผลลัพธ์', tool:'ENCODE', sub:'images / base64 / export'},
@@ -1432,8 +1575,8 @@ body{overflow-x:hidden}
             currentTab = tabId;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             const panel = document.getElementById(tabId); if(panel) panel.classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById(`nav-${tabId}`); if(activeBtn) activeBtn.classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(btn => {btn.classList.remove('active');btn.removeAttribute('aria-current');});
+            const activeBtn = document.getElementById(`nav-${tabId}`); if(activeBtn) {activeBtn.classList.add('active');activeBtn.setAttribute('aria-current','page');}
             const meta = WORKSPACE_META[tabId] || WORKSPACE_META['decode-tab'];
             document.getElementById('workspaceTitle').textContent = meta.title;
             document.getElementById('workspaceSubtitle').textContent = meta.sub;
@@ -1451,6 +1594,7 @@ body{overflow-x:hidden}
         }
         function updateGlobalResults(tabId=currentTab){
             const map={
+                'base64pdf-tab':()=>({...base64PdfStats,sub:'PDF conversion / latest attempt'}),
                 'decode-tab':()=>({processed:typeof decodeStats!=='undefined'?decodeStats.total:0,success:typeof decodeStats!=='undefined'?decodeStats.success:0,error:typeof decodeStats!=='undefined'?decodeStats.error:0,sub:'records / images'}),
                 'rename-tab':()=>({processed:typeof selectedRenameFiles!=='undefined'?selectedRenameFiles.length:0,success:typeof renamedMappingResults!=='undefined'?renamedMappingResults.filter(x=>x.isMatched).length:0,error:typeof selectedRenameFiles!=='undefined'&&typeof renamedMappingResults!=='undefined'?Math.max(0,selectedRenameFiles.length-renamedMappingResults.filter(x=>x.isMatched).length):0,sub:'files in review'}),
                 'encode-tab':()=>({processed:typeof encodeStats!=='undefined'?encodeStats.total:0,success:typeof encodeStats!=='undefined'?encodeStats.success:0,error:typeof encodeStats!=='undefined'?encodeStats.error:0,sub:'images / encoded'}),
