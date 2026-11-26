@@ -370,6 +370,7 @@ body{overflow-x:hidden}
                 <button onclick="switchTab('encode-tab')" id="nav-encode-tab" data-tooltip="Image → Base64" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-file-export"></i></span><span class="nav-label min-w-0"><b class="block text-xs">Image → Base64</b><small class="nav-meta text-[9px] text-slate-600">Encode images</small></span></button>
                 <button onclick="switchTab('paste-tab')" id="nav-paste-tab" data-tooltip="Base64 → Image" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-paste"></i></span><span class="nav-label min-w-0"><b class="block text-xs">Base64 → Image</b><small class="nav-meta text-[9px] text-slate-600">Paste & preview</small></span></button>
                 <button onclick="switchTab('decodesim-tab')" id="nav-decodesim-tab" data-tooltip="Base64 → Image (ChgSIM)" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-sim-card"></i></span><span class="nav-label min-w-0"><b class="block text-xs">Base64 → Image (ChgSIM)</b><small class="nav-meta text-[9px] text-slate-600">SIM image extraction</small></span></button>
+                <button onclick="switchTab('ocr-tab')" id="nav-ocr-tab" data-tooltip="OCR Base64 → Image" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-id-card"></i></span><span class="nav-label min-w-0"><b class="block text-xs">OCR Base64 → Image</b><small class="nav-meta text-[9px] text-slate-600">OCR log extraction</small></span></button>
                 <button onclick="switchTab('pdf-tab')" id="nav-pdf-tab" data-tooltip="PDF → Image" class="nav-item"><span class="nav-icon"><i class="fa-solid fa-file-pdf"></i></span><span class="nav-label min-w-0"><b class="block text-xs">PDF → Image</b><small class="nav-meta text-[9px] text-slate-600">Render PDF pages</small></span></button>
                 <button onclick="switchTab('base64pdf-tab')" id="nav-base64pdf-tab" aria-label="Base64 to PDF" data-tooltip="Base64 → PDF" class="nav-item"><span class="nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></span><span class="nav-label min-w-0"><b class="block text-xs">Base64 → PDF</b><small class="nav-meta text-[9px] text-slate-600">Convert, preview & download</small></span></button>
             </nav>
@@ -754,6 +755,78 @@ body{overflow-x:hidden}
                         ยังไม่มีรูปภาพที่แปลงจาก Base64 ในขณะนี้
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB: OCR LOG BASE64 -> IMAGE ==================== -->
+        <div id="ocr-tab" class="tab-content space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-lg panel-marks p-6 flex flex-col">
+                    <h2 class="text-lg font-semibold text-slate-200 mb-2">Import OCR Log</h2>
+                    <p class="text-xs text-slate-400 mb-3">
+                        อัปโหลดไฟล์ Log (CSV คอลัมน์ <code class="text-brand-400 font-mono">REQUEST_BODY</code> หรือ JSON) ระบบจะ decode
+                        <code class="text-brand-400 font-mono">cardImage</code> และตั้งชื่อรูปตาม <code class="text-brand-400 font-mono">ocrTransactionId</code>
+                        (ID ซ้ำจะต่อท้าย _2, _3, …) เลือกได้หลายไฟล์
+                    </p>
+                    <div id="ocr-dropzone" class="border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-colors rounded-md p-6 text-center cursor-pointer bg-slate-950/40 relative group flex-1 flex flex-col justify-center items-center">
+                        <input type="file" id="ocrFileInput" accept=".txt,.csv,.log,.json" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <div class="space-y-3 pointer-events-none">
+                            <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400"><i class="fa-solid fa-cloud-arrow-up text-xl"></i></div>
+                            <div class="text-slate-300 font-medium text-sm drop-hint">ลากไฟล์ Log มาวาง หรือคลิกเพื่อเลือกไฟล์</div>
+                            <div class="text-[10px] text-slate-500">.txt / .csv / .log / .json</div>
+                            <div id="ocrDropzoneFileCount" class="dropzone-file-count"></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-between gap-3 mt-4">
+                        <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer"><input type="checkbox" id="ocrSkipSame" onchange="processOcrFiles()"> ข้ามรูปที่ซ้ำกันทุกประการ (ID และรูปเดียวกัน)</label>
+                        <button type="button" onclick="clearOcrAll()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-md flex items-center gap-2 transition-all"><i class="fa-solid fa-trash"></i> Clear All</button>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-lg panel-marks p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-200 mb-4">Processing Stats</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-md p-3 text-center">
+                                <div class="text-[10px] text-slate-400 uppercase tracking-wider">Total</div>
+                                <div id="ocr-total" class="text-xl font-bold text-slate-200 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-md p-3 text-center">
+                                <div class="text-[10px] text-emerald-400 uppercase tracking-wider">Success</div>
+                                <div id="ocr-success" class="text-xl font-bold text-emerald-400 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-md p-3 text-center">
+                                <div class="text-[10px] text-amber-400 uppercase tracking-wider">Duplicate</div>
+                                <div id="ocr-duplicate" class="text-xl font-bold text-amber-400 mt-1">0</div>
+                            </div>
+                            <div class="bg-slate-950/50 border border-slate-800/80 rounded-md p-3 text-center">
+                                <div class="text-[10px] text-rose-400 uppercase tracking-wider">Error</div>
+                                <div id="ocr-error" class="text-xl font-bold text-rose-400 mt-1">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <button id="btnDownloadOcrZip" onclick="downloadOcrZip()" disabled class="w-full py-3.5 px-4 bg-slate-800 text-slate-400 rounded-md font-semibold flex items-center justify-center gap-2 transition-all cursor-not-allowed"><i class="fa-solid fa-file-zipper"></i><span>Download All (ZIP)</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-lg panel-marks p-5 overflow-hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></span> Terminal Logs</span>
+                    <button type="button" onclick="clearOcrLogs()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors">Clear Logs</button>
+                </div>
+                <div id="ocrConsole" class="h-44 bg-black/55 rounded-md p-4 font-mono text-xs overflow-y-auto space-y-1.5 border border-slate-950/85">
+                    <div class="text-slate-500">> System initialized. Awaiting OCR log file...</div>
+                </div>
+            </div>
+
+            <div id="ocrResultsSection">
+                <h3 class="text-lg font-semibold text-slate-200 mb-3 flex items-center gap-2"><i class="fa-solid fa-images text-brand-500"></i> OCR Image Previews (<span id="ocrGalleryCount">0</span>)</h3>
+                <div class="result-search-wrap">
+                    <div class="result-search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="ocrResultSearch" class="result-search" type="search" placeholder="ค้นหา ocrTransactionId..."></div>
+                    <span id="ocrFilterCount" class="filter-count">0 results</span>
+                </div>
+                <div id="ocrGallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
             </div>
         </div>
 
@@ -1261,12 +1334,12 @@ body{overflow-x:hidden}
             card.appendChild(cb);
         }
         function getResultCards(containerId){ const c=document.getElementById(containerId); return c?Array.from(c.children).filter(x=>!x.classList.contains('col-span-full')&&!x.classList.contains('hidden')):[]; }
-        function updateBulkCounts(){ document.querySelectorAll('.bulk-toolbar').forEach(bar=>{ const kind=bar.dataset.kind; const c=({decode:'imageGallery',encode:'encodeResultsList',paste:'pasteGallery',sim:'simImageGrid',pdf:'pdfGallery'})[kind]; const cards=getResultCards(c); const selected=cards.filter(x=>x.querySelector('.result-select')?.checked).length; const label=document.getElementById(`bulkCount-${kind}`); const btn=document.getElementById(`bulkDownload-${kind}`); if(label)label.textContent=`${selected} selected / ${cards.length} visible`; if(btn)btn.disabled=selected===0; }); }
+        function updateBulkCounts(){ document.querySelectorAll('.bulk-toolbar').forEach(bar=>{ const kind=bar.dataset.kind; const c=({decode:'imageGallery',encode:'encodeResultsList',paste:'pasteGallery',sim:'simImageGrid',pdf:'pdfGallery',ocr:'ocrGallery'})[kind]; const cards=getResultCards(c); const selected=cards.filter(x=>x.querySelector('.result-select')?.checked).length; const label=document.getElementById(`bulkCount-${kind}`); const btn=document.getElementById(`bulkDownload-${kind}`); if(label)label.textContent=`${selected} selected / ${cards.length} visible`; if(btn)btn.disabled=selected===0; }); }
         function selectAllResults(containerId){ const c=document.getElementById(containerId); if(!c)return; Array.from(c.children).filter(x=>!x.classList.contains('hidden')&&!x.classList.contains('col-span-full')).forEach(card=>{const cb=card.querySelector('.result-select');if(cb){cb.checked=true;card.classList.add('result-card-selected')}}); updateBulkCounts(); }
         function clearSelectedResults(containerId){ const c=document.getElementById(containerId); if(!c)return; Array.from(c.children).forEach(card=>{const cb=card.querySelector('.result-select');if(cb){cb.checked=false;card.classList.remove('result-card-selected')}}); updateBulkCounts(); }
         function downloadBlob(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
         function downloadSelectedResults(kind){
-            const map={decode:'imageGallery',encode:'encodeResultsList',paste:'pasteGallery',sim:'simImageGrid',pdf:'pdfGallery'}; const c=document.getElementById(map[kind]); if(!c)return;
+            const map={decode:'imageGallery',encode:'encodeResultsList',paste:'pasteGallery',sim:'simImageGrid',pdf:'pdfGallery',ocr:'ocrGallery'}; const c=document.getElementById(map[kind]); if(!c)return;
             const selected=Array.from(c.children).filter(x=>x.querySelector('.result-select')?.checked); if(!selected.length)return;
             if(kind==='encode'){
                 const names=new Set(selected.map(x=>x.dataset.fileName)); const rows=encodeResults.filter(x=>names.has(x.name)&&x.base64).map(x=>`${x.name}=${x.base64}`); downloadBlob(new Blob([rows.join('\n')],{type:'text/plain'}),`Base64_Selected_${Date.now()}.txt`); showToast(`ดาวน์โหลดรายการที่เลือก ${rows.length} รายการแล้ว`,'success'); return;
@@ -1286,6 +1359,7 @@ body{overflow-x:hidden}
             ensureBulkToolbar('pasteResultsSection','pasteGallery','paste'); ensureReportActions('pasteResultsSection','paste');
             ensureBulkToolbar('simOutputSection','simImageGrid','sim'); ensureReportActions('simOutputSection','sim');
             ensureBulkToolbar('pdfResultsSection','pdfGallery','pdf'); ensureReportActions('pdfResultsSection','pdf');
+            ensureBulkToolbar('ocrResultsSection','ocrGallery','ocr'); document.querySelector('#ocrResultsSection [data-retry]')?.remove(); ensureReportActions('ocrResultsSection','ocr');
         }
         function installProgressWrappers(){
             const originalRead=window.readFileAsBase64;
@@ -1304,6 +1378,7 @@ body{overflow-x:hidden}
             if(kind==='decode') return (galleryItemsStore.imageGallery||[]).map(x=>({name:x.name,status:'Success',size:Math.round((x.dataUrl.length*3)/4)}));
             if(kind==='paste') return (galleryItemsStore.pasteGallery||[]).map(x=>({name:x.name,status:'Success',size:Math.round((x.dataUrl.length*3)/4)}));
             if(kind==='pdf') return (galleryItemsStore.pdfGallery||[]).map(x=>({name:x.name,status:'Success'}));
+            if(kind==='ocr') return ocrReport;
             if(kind==='sim') return simExtractedImages.map(x=>({name:x.fileName||x.name,status:'Success',size:x.data?.length||0}));
             return [];
         }
@@ -1312,7 +1387,7 @@ body{overflow-x:hidden}
 
         function savePdfPreferences(){ localStorage.setItem('imageToolkitPdfPrefs',JSON.stringify({format:document.getElementById('pdfOutputFormat')?.value,scale:document.getElementById('pdfScale')?.value})); }
         function restorePdfPreferences(){ try{const p=JSON.parse(localStorage.getItem('imageToolkitPdfPrefs')||'null');if(p?.format&&document.getElementById('pdfOutputFormat'))document.getElementById('pdfOutputFormat').value=p.format;if(p?.scale&&document.getElementById('pdfScale'))document.getElementById('pdfScale').value=p.scale;}catch(e){} }
-        function installKeyboardShortcuts(){ document.addEventListener('keydown',e=>{if(!(e.ctrlKey&&e.key==='Enter'))return;if(e.target.matches('input,select,textarea') && e.target.id==='pasteBase64Input'){} e.preventDefault(); const actions={'base64pdf-tab':convertBase64ToPdf,'decode-tab':parseAndDecode,'rename-tab':processRenameMapping,'encode-tab':convertImagesToBase64,'paste-tab':convertPastedBase64,'decodesim-tab':processSimData,'pdf-tab':convertPdfToImages}; const fn=actions[currentTab];if(typeof fn==='function'){fn();showToast('Ctrl+Enter → เริ่มประมวลผล','info',{duration:1800});}}); }
+        function installKeyboardShortcuts(){ document.addEventListener('keydown',e=>{if(!(e.ctrlKey&&e.key==='Enter'))return;if(e.target.matches('input,select,textarea') && e.target.id==='pasteBase64Input'){} e.preventDefault(); const actions={'base64pdf-tab':convertBase64ToPdf,'decode-tab':parseAndDecode,'rename-tab':processRenameMapping,'encode-tab':convertImagesToBase64,'paste-tab':convertPastedBase64,'decodesim-tab':processSimData,'pdf-tab':convertPdfToImages,'ocr-tab':processOcrFiles}; const fn=actions[currentTab];if(typeof fn==='function'){fn();showToast('Ctrl+Enter → เริ่มประมวลผล','info',{duration:1800});}}); }
         function addRetryButton(sectionId,kind){ const section=document.getElementById(sectionId);if(!section||section.querySelector(`[data-retry="${kind}"]`))return; const host=section.querySelector('.flex.flex-col.sm\\:flex-row')||section.querySelector('h3')?.parentElement; if(!host)return; const b=document.createElement('button');b.type='button';b.dataset.retry=kind;b.className='px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 rounded-md text-xs font-semibold';b.innerHTML='<i class="fa-solid fa-rotate-right"></i> Retry Failed Only';b.onclick=()=>retryFailedOnly(kind);host.appendChild(b); }
         function updateRetryButtons(){ ['decode','encode','paste','pdf'].forEach(k=>{const b=document.querySelector(`[data-retry="${k}"]`);if(b)b.disabled=!failedQueues[k].length;b?.classList.toggle('opacity-40',!failedQueues[k].length);}); }
         async function retryDecodeJobs(jobs){
@@ -1506,8 +1581,9 @@ body{overflow-x:hidden}
             });
             document.getElementById('simDropFileInput')?.addEventListener('change', handleSimFileSelect);
 
-            [['imageGallery','decodeResultSearch','decodeFilterCount'],['encodeResultsList','encodeResultSearch','encodeFilterCount'],['pasteGallery','pasteResultSearch','pasteFilterCount'],['simImageGrid','simResultSearch','simFilterCount'],['pdfGallery','pdfResultSearch','pdfFilterCount']]
+            [['imageGallery','decodeResultSearch','decodeFilterCount'],['encodeResultsList','encodeResultSearch','encodeFilterCount'],['pasteGallery','pasteResultSearch','pasteFilterCount'],['simImageGrid','simResultSearch','simFilterCount'],['pdfGallery','pdfResultSearch','pdfFilterCount'],['ocrGallery','ocrResultSearch','ocrFilterCount']]
                 .forEach(([c,i,n]) => document.getElementById(i)?.addEventListener('input',()=>filterResults(c,i,n)));
+            initOcrTab();
             document.getElementById('renameResultSearch')?.addEventListener('input', filterRenameTable);
             ensureBulkUI(); addRetryButton('decodeResultsSection','decode'); addRetryButton('encodeResultsSection','encode'); addRetryButton('pasteResultsSection','paste'); addRetryButton('pdfResultsSection','pdf');
             document.getElementById('pdfOutputFormat')?.addEventListener('change',savePdfPreferences); document.getElementById('pdfScale')?.addEventListener('change',savePdfPreferences);
@@ -1522,6 +1598,7 @@ body{overflow-x:hidden}
             'encode-tab': {title:'Image → Base64', desc:'แปลงรูปภาพเป็น Base64 แบบหลายไฟล์ พร้อม Copy และ Download ผลลัพธ์', tool:'ENCODE', sub:'images / base64 / export'},
             'paste-tab': {title:'Base64 → Image', desc:'วาง Base64 หลายรายการ แปลงเป็นรูป และดู Preview พร้อมดาวน์โหลด', tool:'PASTE', sub:'paste / preview / export'},
             'decodesim-tab': {title:'Base64 → Image (ChgSIM)', desc:'ถอดรูปจากข้อมูล ChgSIM พร้อมตรวจสอบชนิดไฟล์และผลลัพธ์', tool:'CHGSIM', sub:'extract / validate / export'},
+            'ocr-tab': {title:'OCR Base64 → Image', desc:'อัปโหลด OCR Log แล้ว decode รูปภาพ ตั้งชื่อตาม ocrTransactionId', tool:'OCR', sub:'log / decode / export'},
             'pdf-tab': {title:'PDF → Image', desc:'แปลง PDF เป็นภาพแบบหลายไฟล์ พร้อมดูจำนวนหน้าและดาวน์โหลด ZIP', tool:'PDF', sub:'render / preview / export'}
         };
         function switchTab(tabId) {
@@ -1553,6 +1630,7 @@ body{overflow-x:hidden}
                 'encode-tab':()=>({processed:typeof encodeStats!=='undefined'?encodeStats.total:0,success:typeof encodeStats!=='undefined'?encodeStats.success:0,error:typeof encodeStats!=='undefined'?encodeStats.error:0,sub:'images / encoded'}),
                 'paste-tab':()=>({processed:typeof pasteStats!=='undefined'?pasteStats.total:0,success:typeof pasteStats!=='undefined'?pasteStats.success:0,error:typeof pasteStats!=='undefined'?pasteStats.error:0,sub:'pasted items'}),
                 'decodesim-tab':()=>({processed:typeof simExtractedImages!=='undefined'?simExtractedImages.length:0,success:typeof simExtractedImages!=='undefined'?simExtractedImages.length:0,error:0,sub:'extracted images'}),
+                'ocr-tab':()=>({processed:ocrStats.total,success:(galleryItemsStore.ocrGallery||[]).length,error:ocrStats.error,sub:'OCR records'}),
                 'pdf-tab':()=>({processed:typeof pdfStats!=='undefined'?pdfStats.total:0,success:typeof pdfStats!=='undefined'?pdfStats.success:0,error:typeof pdfStats!=='undefined'?pdfStats.error:0,sub:'pages / images'})
             };
             try{const x=(map[tabId]||map['decode-tab'])();setAnimatedText('kpiProcessed',x.processed||0);setAnimatedText('kpiSuccess',x.success||0);setAnimatedText('kpiErrors',x.error||0);document.getElementById('kpiProcessedSub').textContent=x.sub;}catch(e){}
@@ -2963,6 +3041,257 @@ body{overflow-x:hidden}
                     a.click();
                     document.body.removeChild(a);
                 }, i * 250);
+            });
+        }
+
+        // ==================== OCR LOG BASE64 -> IMAGE ENGINE ====================
+        let ocrFiles = [];
+        let ocrZip = new JSZip();
+        let ocrStats = { total: 0, success: 0, duplicate: 0, error: 0 };
+        let ocrReport = [];
+        let ocrRunId = 0; // เปลี่ยนทุกครั้งที่เริ่มใหม่/ล้างข้อมูล เพื่อยกเลิกรอบเก่า
+        const OCR_EMPTY_GALLERY = '<div class="col-span-full py-12 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-lg"><i class="fa-regular fa-id-card text-4xl mb-3 block opacity-40"></i>ยังไม่มีรูปภาพจาก OCR Log</div>';
+
+        // CSV (RFC 4180): field ครอบด้วย "..." และ "" คือเครื่องหมาย " หนึ่งตัว
+        function parseOcrCsv(text) {
+            const fields = [];
+            const re = /"((?:[^"]|"")*)("|$)|([^,"\r\n]+)/g;
+            let m;
+            while ((m = re.exec(text)) !== null) {
+                if (m[1] !== undefined) fields.push(m[1].replace(/""/g, '"'));
+                else fields.push(m[3]);
+            }
+            return fields.filter(f => f.includes('{'));
+        }
+
+        // ตัด JSON object ออกจากข้อความ Log (รองรับ JSON หลายบรรทัด และมีข้อความนำหน้า)
+        function extractOcrJsonBlocks(text) {
+            const blocks = [];
+            let start = text.indexOf('{');
+            while (start !== -1) {
+                let depth = 0, inString = false, i = start;
+                for (; i < text.length; i++) {
+                    const c = text[i];
+                    if (inString) {
+                        if (c === '\\') i++;
+                        else if (c === '"') inString = false;
+                        else if (c === '\n') break; // string ใน JSON ขึ้นบรรทัดใหม่ไม่ได้ = ข้อมูลขาด
+                    } else if (c === '"') inString = true;
+                    else if (c === '{') depth++;
+                    else if (c === '}' && --depth === 0) break;
+                }
+                const complete = depth === 0 && i < text.length;
+                const end = complete ? i + 1 : Math.min(i, text.length);
+                blocks.push(text.slice(start, end));
+                start = text.indexOf('{', complete ? end : (inString ? end : start + 1));
+            }
+            return blocks;
+        }
+
+        // ค้นหา object ที่มี ocrTransactionId / cardImage แม้ซ้อนอยู่ใน object หรือ JSON string
+        function findOcrRecords(node, found = [], depth = 0) {
+            if (depth > 8) return found;
+            if (typeof node === 'string') {
+                if (/ocrTransactionId|cardImage/.test(node)) {
+                    extractOcrJsonBlocks(node).forEach(b => { try { findOcrRecords(JSON.parse(b), found, depth + 1); } catch (_) {} });
+                }
+            } else if (node && typeof node === 'object') {
+                if (!Array.isArray(node) && ('cardImage' in node)) found.push(node);
+                else Object.values(node).forEach(v => findOcrRecords(v, found, depth + 1));
+            }
+            return found;
+        }
+
+        function parseOcrLog(text) {
+            text = text.replace(/^\uFEFF/, '');
+            const isCsv = text.includes('{""');
+            const chunks = isCsv ? parseOcrCsv(text) : extractOcrJsonBlocks(text);
+            const entries = [];
+            chunks.forEach(chunk => {
+                const before = entries.length;
+                let failure = '';
+                const blocks = isCsv ? extractOcrJsonBlocks(chunk) : [chunk];
+                blocks.forEach(block => {
+                    try { findOcrRecords(JSON.parse(block)).forEach(record => entries.push({ record })); }
+                    catch (e) { failure = 'JSON ไม่สมบูรณ์หรือรูปแบบผิด'; }
+                });
+                if (entries.length === before && /ocrTransactionId|cardImage/.test(chunk)) {
+                    const id = chunk.match(/ocrTransactionId\\?"+\s*:\s*\\?"+([^"\\]+)/);
+                    entries.push({ failure: failure || 'ไม่พบฟิลด์ cardImage', id: id ? id[1] : '' });
+                }
+            });
+            return entries;
+        }
+
+        // คืน Base64 ที่สะอาดและเป็นรูปภาพจริง ไม่เช่นนั้น throw พร้อมสาเหตุ
+        function decodeOcrImage(value) {
+            if (typeof value !== 'string' || !value.trim()) throw new Error('cardImage ว่าง');
+            let b64 = value.replace(/^\s*data:[^,]*,/i, '').replace(/\\[rnt]/g, '').replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/').replace(/=+$/, '');
+            if (!/^[A-Za-z0-9+/]+$/.test(b64) || b64.length % 4 === 1) throw new Error('Base64 ไม่ถูกต้องหรือถูกตัด');
+            b64 += '='.repeat((4 - b64.length % 4) % 4);
+            const bytes = base64ToBytes(b64);
+            const type = detectFileType(b64);
+            if (!type.mime.startsWith('image/') || /Unknown|default/.test(type.label)) throw new Error('ข้อมูลที่ decode ได้ไม่ใช่รูปภาพ');
+            let truncated = false;
+            const n = bytes.length;
+            if (type.ext === 'jpg') { truncated = true; for (let i = n - 2; i >= Math.max(0, n - 4096); i--) if (bytes[i] === 0xFF && bytes[i + 1] === 0xD9) { truncated = false; break; } }
+            if (type.ext === 'png') truncated = !(n > 12 && String.fromCharCode(...bytes.slice(n - 8, n - 4)) === 'IEND');
+            let dims = null; try { dims = getImageDimensions(bytes, type.ext); } catch (_) {}
+            return { b64, type, truncated, size: n, dim: dims && dims.width && dims.height ? `${dims.width}x${dims.height}px` : 'N/A' };
+        }
+
+        function appendOcrLog(message, type = 'info') {
+            const box = document.getElementById('ocrConsole');
+            const style = { success: ['text-emerald-400', '✅ '], duplicate: ['text-amber-400', '⚠️ '], error: ['text-rose-400', '❌ '], title: ['text-cyan-400 font-bold border-b border-slate-800 pb-1 mt-3', ''] }[type] || ['text-slate-400', '> '];
+            const line = document.createElement('div');
+            line.className = style[0];
+            line.textContent = style[1] + message;
+            box.appendChild(line);
+            box.scrollTop = box.scrollHeight;
+        }
+        function clearOcrLogs() { document.getElementById('ocrConsole').innerHTML = '<div class="text-slate-500">> Logs cleared. Ready.</div>'; }
+
+        function updateOcrStatsUI() {
+            ['total', 'success', 'duplicate', 'error'].forEach(k => setAnimatedText(`ocr-${k}`, ocrStats[k]));
+            document.getElementById('ocrGalleryCount').textContent = (galleryItemsStore.ocrGallery || []).length;
+            if (currentTab === 'ocr-tab') updateGlobalResults('ocr-tab');
+        }
+
+        function setOcrZipEnabled(enabled) {
+            const btn = document.getElementById('btnDownloadOcrZip');
+            btn.disabled = !enabled;
+            btn.className = enabled
+                ? 'w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white rounded-md font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-brand-500/20'
+                : 'w-full py-3.5 px-4 bg-slate-800 text-slate-400 rounded-md font-semibold flex items-center justify-center gap-2 transition-all cursor-not-allowed';
+        }
+
+        function resetOcrResults() {
+            ocrRunId++;
+            ocrZip = new JSZip();
+            ocrStats = { total: 0, success: 0, duplicate: 0, error: 0 };
+            ocrReport = [];
+            resetGalleryItems('ocrGallery');
+            document.getElementById('ocrGallery').innerHTML = OCR_EMPTY_GALLERY;
+            setOcrZipEnabled(false);
+            updateOcrStatsUI();
+            filterResults('ocrGallery', 'ocrResultSearch', 'ocrFilterCount');
+        }
+
+        function clearOcrAll() {
+            ocrFiles = [];
+            document.getElementById('ocrFileInput').value = '';
+            document.getElementById('ocrDropzoneFileCount').textContent = '';
+            document.getElementById('ocrResultSearch').value = '';
+            if (processingUI.active && processingUI.label.startsWith('OCR')) finishProcessingProgress('Cancelled');
+            resetOcrResults();
+            clearOcrLogs();
+        }
+
+        async function processOcrFiles() {
+            if (!ocrFiles.length) return;
+            resetOcrResults();
+            const run = ocrRunId, files = ocrFiles.slice(), skipSame = document.getElementById('ocrSkipSame').checked;
+            const usedNames = new Set(), seenImages = new Map(), seenIds = new Set();
+            const pause = () => new Promise(r => setTimeout(r, 0));
+            clearOcrLogs();
+            startProcessingProgress('OCR Base64 → Image', 0, 'Reading log files…');
+
+            const entries = [];
+            for (const file of files) {
+                try {
+                    const found = parseOcrLog(await file.text());
+                    if (run !== ocrRunId) return;
+                    appendOcrLog(`File loaded: ${file.name} · ${found.length} record(s)`, 'title');
+                    if (!found.length) { appendOcrLog(`${file.name} : ไม่พบรายการ ocrTransactionId / cardImage`, 'error'); ocrStats.error++; }
+                    found.forEach(e => entries.push({ ...e, source: file.name }));
+                } catch (e) {
+                    if (run !== ocrRunId) return;
+                    appendOcrLog(`${file.name} : อ่านไฟล์ไม่สำเร็จ (${e.message})`, 'error'); ocrStats.error++;
+                }
+            }
+
+            for (let i = 0; i < entries.length; i++) {
+                const { record, failure, id, source } = entries[i];
+                const txId = String((record ? record.ocrTransactionId : id) ?? '').trim();
+                const label = txId || `Record #${i + 1}`;
+                const row = { ocrTransactionId: txId, cardType: record?.cardType || '', name: '', status: 'Error', size: 0, dimension: '', source, note: '' };
+                ocrStats.total++;
+                try {
+                    if (failure) throw new Error(failure);
+                    const img = decodeOcrImage(record.cardImage);
+                    const baseName = txId.replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').replace(/^\.+/, '') || `unknown_ocr_${i + 1}`;
+                    const sameKey = `${baseName}\n${img.b64}`;
+                    const sameAs = seenImages.get(sameKey);
+                    if (sameAs && skipSame) {
+                        ocrStats.duplicate++;
+                        Object.assign(row, { name: sameAs, status: 'Skipped (same image)' });
+                        appendOcrLog(`${label} : ข้าม รูปเหมือนกับ ${sameAs}`, 'duplicate');
+                    } else {
+                        let name = `${baseName}.${img.type.ext}`, n = 2;
+                        while (usedNames.has(name.toLowerCase())) name = `${baseName}_${n++}.${img.type.ext}`;
+                        usedNames.add(name.toLowerCase());
+                        const isDup = Boolean(txId) && seenIds.has(txId);
+                        seenIds.add(txId);
+                        if (!sameAs) seenImages.set(sameKey, name);
+                        ocrZip.file(name, img.b64, { base64: true });
+                        appendDecodedCard(name, name, img.b64, isDup, false, img.type, img.dim, document.getElementById('ocrGallery'));
+                        const notes = [];
+                        if (sameAs) notes.push(`รูปเหมือน ${sameAs}`);
+                        if (!txId) notes.push('ไม่มี ocrTransactionId');
+                        if (img.truncated) notes.push('ไฟล์รูปอาจไม่สมบูรณ์');
+                        if (isDup) ocrStats.duplicate++; else ocrStats.success++;
+                        Object.assign(row, { name, status: isDup ? 'Duplicate ID' : 'Success', size: img.size, dimension: img.dim, note: notes.join(', ') });
+                        appendOcrLog(`${name} [${img.type.label}, ${img.dim}, ${row.cardType || '-'}]${notes.length ? ' · ' + row.note : ''}`, isDup || notes.length ? 'duplicate' : 'success');
+                    }
+                } catch (e) {
+                    ocrStats.error++;
+                    row.note = e.message;
+                    appendOcrLog(`${label} : Decode Fail (${e.message})`, 'error');
+                }
+                ocrReport.push(row);
+                if (i % 5 === 4 || i === entries.length - 1) {
+                    setProcessingProgress('OCR Base64 → Image', i + 1, entries.length, label);
+                    updateOcrStatsUI();
+                    await pause();
+                    if (run !== ocrRunId) return;
+                }
+            }
+
+            appendOcrLog('FINAL SUMMARY REPORT', 'title');
+            appendOcrLog(`Total Records : ${ocrStats.total}`);
+            appendOcrLog(`Success : ${ocrStats.success}`, 'success');
+            appendOcrLog(`Duplicate ID : ${ocrStats.duplicate}`, 'duplicate');
+            appendOcrLog(`Errors : ${ocrStats.error}`, 'error');
+            updateOcrStatsUI();
+            filterResults('ocrGallery', 'ocrResultSearch', 'ocrFilterCount');
+            const images = (galleryItemsStore.ocrGallery || []).length;
+            setOcrZipEnabled(images > 0);
+            finishProcessingProgress(`Done · ${images} images / ${ocrStats.error} errors`);
+            if (images) { focusResultZone('ocrResultsSection'); showToast(`Decode สำเร็จ ${images} รูป${ocrStats.error ? ` · ผิดพลาด ${ocrStats.error}` : ''}`, ocrStats.error ? 'warning' : 'success'); }
+            else showToast('ไม่พบรูปภาพที่ decode ได้ กรุณาตรวจสอบไฟล์ Log', 'error');
+        }
+
+        async function downloadOcrZip() {
+            if (!(galleryItemsStore.ocrGallery || []).length) return;
+            setOcrZipEnabled(false);
+            try { downloadBlob(await ocrZip.generateAsync({ type: 'blob' }), `OCR_Images_${Date.now()}.zip`); }
+            catch (e) { showToast(`สร้าง ZIP ไม่สำเร็จ (${e.message})`, 'error'); }
+            setOcrZipEnabled((galleryItemsStore.ocrGallery || []).length > 0);
+        }
+
+        function initOcrTab() {
+            document.getElementById('ocrGallery').innerHTML = OCR_EMPTY_GALLERY;
+            bindRealDropzone('ocr-dropzone', 'ocrFileInput', {
+                countId: 'ocrDropzoneFileCount',
+                accept: f => /\.(txt|csv|log|json)$/i.test(f.name),
+                invalidMessage: 'เมนู OCR รองรับไฟล์ .txt, .csv, .log, .json เท่านั้น',
+                message: 'รับไฟล์ OCR Log แล้ว'
+            });
+            document.getElementById('ocrFileInput').addEventListener('change', e => {
+                if (!e.target.files.length) return;
+                ocrFiles = Array.from(e.target.files);
+                e.target.value = ''; // เลือกไฟล์เดิมซ้ำได้
+                processOcrFiles();
             });
         }
 
