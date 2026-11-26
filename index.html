@@ -2,14 +2,16 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' blob: https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src blob: data: https://cdnjs.cloudflare.com; worker-src blob:; frame-src blob:; object-src 'self' blob:; base-uri 'none'; form-action 'none'">
+    <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Processing By TSMC</title>
     <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <!-- JSZip for zipping files -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- PDF.js for PDF -> Image conversion -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
@@ -1058,9 +1060,58 @@ body{overflow-x:hidden}
 
     <script>
         // ตั้งค่า Worker ของ PDF.js (จำเป็นสำหรับการ Render PDF)
-        if (window['pdfjsLib']) {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        // โหลด Worker ผ่าน fetch เพื่อให้ตรวจ Subresource Integrity ได้ ก่อนนำไปรันจาก blob:
+        let pdfWorkerPromise = null;
+        function loadPdfWorker() {
+            if (!pdfWorkerPromise) {
+                pdfWorkerPromise = fetch('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js', { integrity: 'sha512-BbrZ76UNZq5BhH7LL7pn9A4TKQpQeNCHOo65/akfelcIBbcVvYWOFQKPXIrykE3qZxYjmDX573oa4Ywsc7rpTw==', referrerPolicy: 'no-referrer' })
+                    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
+                    .then(code => { pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(URL.createObjectURL(new Blob([code], { type: 'text/javascript' }))); })
+                    .catch(err => { pdfWorkerPromise = null; throw new Error(`โหลด PDF Worker ไม่สำเร็จ: ${err.message}`); });
+            }
+            return pdfWorkerPromise;
         }
+        // ทุกการเปิด PDF ต้องผ่านฟังก์ชันนี้: isEvalSupported:false ปิดช่องโหว่ CVE-2024-4367
+        async function openPdfDocument(data) {
+            await loadPdfWorker();
+            return pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
+        }
+        const MAX_CANVAS_PIXELS = 60 * 1000 * 1000;
+        function assertCanvasSize(viewport) {
+            if (viewport.width * viewport.height > MAX_CANVAS_PIXELS) throw new Error('หน้า PDF มีขนาดใหญ่เกินไป กรุณาลด Scale');
+        }
+
+        // ==================== INPUT SAFETY ====================
+        // ตัด . .. drive letter และอักขระควบคุมออกจาก path ใน ZIP (ยังรักษาโฟลเดอร์ปกติไว้)
+        function safeZipPath(path, fallback = 'file') {
+            const parts = String(path ?? '').replace(/[\x00-\x1f]/g, '').split(/[\\/]+/)
+                .map((p, i) => i === 0 ? p.replace(/^[A-Za-z]:/, '') : p)
+                .filter(p => p && !/^[. ]+$/.test(p));
+            return parts.join('/') || fallback;
+        }
+        function uniqueZipPath(zip, path) {
+            let candidate = path, n = 1;
+            const m = path.match(/^(.*?)(\.[^./]*)?$/);
+            while (zip.files[candidate]) candidate = `${m[1]}_${n++}${m[2] || ''}`;
+            return candidate;
+        }
+        const UPLOAD_LIMITS = { fileMB: 200, totalMB: 500, count: 5000 };
+        // ทำงานก่อน handler ของแต่ละเมนู (capture phase)
+        document.addEventListener('change', e => {
+            const input = e.target;
+            if (!input || input.type !== 'file' || !input.files) return;
+            const files = Array.from(input.files), mb = 1024 * 1024;
+            let problem = '';
+            if (files.length > UPLOAD_LIMITS.count) problem = `เลือกได้ไม่เกิน ${UPLOAD_LIMITS.count} ไฟล์ต่อครั้ง`;
+            else if (files.some(f => f.size > UPLOAD_LIMITS.fileMB * mb)) problem = `ไฟล์ต้องไม่เกิน ${UPLOAD_LIMITS.fileMB} MB ต่อไฟล์`;
+            else if (files.reduce((t, f) => t + f.size, 0) > UPLOAD_LIMITS.totalMB * mb) problem = `ขนาดรวมต้องไม่เกิน ${UPLOAD_LIMITS.totalMB} MB`;
+            if (!problem) return;
+            e.stopImmediatePropagation();
+            input.value = '';
+            const count = input.parentElement?.querySelector('.dropzone-file-count');
+            if (count) count.textContent = '';
+            showToast(problem, 'error');
+        }, true);
 
 
         // Base64 -> PDF. No upload, no persistence and no extra dependencies.
@@ -1368,10 +1419,10 @@ body{overflow-x:hidden}
         function updateRenameBulkCount(){const rows=Array.from(document.querySelectorAll('.rename-row-select'));const selected=rows.filter(x=>x.checked).length;const count=document.getElementById('bulkCount-rename');const btn=document.getElementById('bulkDownload-rename');if(count)count.textContent=`${selected} selected / ${rows.length} files`;if(btn)btn.disabled=selected===0;}
         function selectAllRenameRows(){document.querySelectorAll('.rename-row-select').forEach(x=>x.checked=true);updateRenameBulkCount();}
         function clearSelectedRenameRows(){document.querySelectorAll('.rename-row-select').forEach(x=>x.checked=false);const a=document.getElementById('renameSelectAll');if(a)a.checked=false;updateRenameBulkCount();}
-        async function downloadSelectedRename(){const idx=Array.from(document.querySelectorAll('.rename-row-select')).filter(x=>x.checked).map(x=>Number(x.dataset.index));if(!idx.length)return;const zip=new JSZip();for(const i of idx){const item=renamedMappingResults[i];if(!item?.fileRef)continue;await new Promise(resolve=>{const r=new FileReader();r.onload=e=>{zip.file(item.targetName||item.originalName,e.target.result);resolve();};r.onerror=resolve;r.readAsArrayBuffer(item.fileRef);});}const blob=await zip.generateAsync({type:'blob'});downloadBlob(blob,`Batch_Renamed_Selected_${Date.now()}.zip`);showToast(`ดาวน์โหลด ${idx.length} ไฟล์ที่เลือกแล้ว`,'success');}
+        async function downloadSelectedRename(){const idx=Array.from(document.querySelectorAll('.rename-row-select')).filter(x=>x.checked).map(x=>Number(x.dataset.index));if(!idx.length)return;const zip=new JSZip();for(const i of idx){const item=renamedMappingResults[i];if(!item?.fileRef)continue;await new Promise(resolve=>{const r=new FileReader();r.onload=e=>{zip.file(uniqueZipPath(zip,safeZipPath(item.targetName,item.originalName)),e.target.result);resolve();};r.onerror=resolve;r.readAsArrayBuffer(item.fileRef);});}const blob=await zip.generateAsync({type:'blob'});downloadBlob(blob,`Batch_Renamed_Selected_${Date.now()}.zip`);showToast(`ดาวน์โหลด ${idx.length} ไฟล์ที่เลือกแล้ว`,'success');}
         
         function downloadDataUrl(url,name){ if(!url)return; const a=document.createElement('a');a.href=url;a.download=name;a.click(); }
-        function csvEscape(v){ return `"${String(v??'').replace(/"/g,'""')}"`; }
+        function csvEscape(v){ let t=String(v??''); if(typeof v!=='number' && /^(\s*[=+\-@＝＋－＠]|[\t\r\n])/.test(t)) t=`'${t}`; return `"${t.replace(/"/g,'""')}"`; }
         function reportRows(kind){
             if(kind==='encode') return encodeResults.map(x=>({name:x.name,status:x.base64?'Success':'Error',size:x.sizeLabel,type:x.typeLabel,dimension:x.dimensionLabel,error:x.error||''}));
             if(kind==='rename') return renamedMappingResults.map(x=>({name:x.originalName,target:x.targetName,status:x.isMatched?'Matched':'Keep Original',size:x.fileRef?.size||0}));
@@ -1399,7 +1450,7 @@ body{overflow-x:hidden}
                     if(!job.mobile || !job.data) throw new Error('Missing MobileNo/eApp data');
                     const cleaned=cleanBase64(job.data); if(!cleaned) throw new Error('Bad Base64');
                     const ft=detectFileType(cleaned); let dims=null; try{dims=getImageDimensions(base64ToBytes(cleaned),ft.ext);}catch(e){}
-                    const dim=(dims&&dims.width&&dims.height)?`${dims.width}x${dims.height}px`:'N/A'; const orig=`${job.mobile}.${ft.ext}`; let path=map[`${job.mobile}.jpg`]||map[orig]||map[job.mobile]||`output_eApp_images/${orig}`; if(path.startsWith('/'))path=path.substring(1);
+                    const dim=(dims&&dims.width&&dims.height)?`${dims.width}x${dims.height}px`:'N/A'; const orig=`${job.mobile}.${ft.ext}`; let path=map[`${job.mobile}.jpg`]||map[orig]||map[job.mobile]||`output_eApp_images/${orig}`; path=safeZipPath(path,`output_eApp_images/record_${i+1}.${ft.ext}`);
                     let finalPath=path;let n=1;while(decodedFileNames.has(finalPath)){const d=finalPath.lastIndexOf('.');finalPath=d>-1?`${finalPath.slice(0,d)}_retry${n}${finalPath.slice(d)}`:`${finalPath}_retry${n}`;n++;}
                     decodedFileNames.add(finalPath);const name=finalPath.split('/').pop()||finalPath;decodeZip.file(finalPath,cleaned,{base64:true});decodedFilesMap[finalPath]=cleaned;appendDecodedCard(name,finalPath,cleaned,false,!!(map[`${job.mobile}.jpg`]||map[orig]||map[job.mobile]),ft,dim,imageGallery);decodeStats.error=Math.max(0,decodeStats.error-1);decodeStats.success++;ok=true;
                 }catch(e){failedQueues.decode.push(job);}
@@ -1414,7 +1465,7 @@ body{overflow-x:hidden}
             if(kind==='decode'){ const jobs=[...failedQueues.decode]; if(!jobs.length)return; failedQueues.decode=[]; retryDecodeJobs(jobs); return; }
             if(kind==='pdf'){ showToast('PDF Retry จะประมวลผลเฉพาะหน้า/ไฟล์ที่ล้มเหลวในการรอบล่าสุด','info'); const jobs=[...failedQueues.pdf];failedQueues.pdf=[]; retryPdfJobs(jobs); }
         }
-        async function retryPdfJobs(jobs){ if(!jobs.length)return; const fmt=document.getElementById('pdfOutputFormat').value,scale=parseFloat(document.getElementById('pdfScale').value)||2,mime=fmt==='jpeg'?'image/jpeg':'image/png',quality=fmt==='jpeg'?0.92:undefined;startProcessingProgress('Retry PDF Failed Only',jobs.length);for(let i=0;i<jobs.length;i++){const j=jobs[i];try{const page=await j.pdfDoc.getPage(j.pageNum),vp=page.getViewport({scale}),canvas=document.createElement('canvas');canvas.width=vp.width;canvas.height=vp.height;const ctx=canvas.getContext('2d');if(fmt==='jpeg'){ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);}await page.render({canvasContext:ctx,viewport:vp}).promise;const b64=await canvasToBase64(canvas,mime,quality),ext=fmt==='jpeg'?'jpg':'png',name=`${j.baseName}_page${String(j.pageNum).padStart(3,'0')}.${ext}`;pdfZip.file(name,b64,{base64:true});appendDecodedCard(name,name,b64,false,false,{ext,mime,label:fmt.toUpperCase()},`${Math.round(vp.width)}x${Math.round(vp.height)}px`,pdfGallery);pdfStats.success++;pdfStats.error=Math.max(0,pdfStats.error-1);}catch(e){failedQueues.pdf.push(j);}setProcessingProgress('Retry PDF Failed Only',i+1,jobs.length,`${j.fileName} · page ${j.pageNum}`);updatePdfStatsUI();}filterResults('pdfGallery','pdfResultSearch','pdfFilterCount');updateRetryButtons();updateBulkCounts();finishProcessingProgress('Retry complete');if(failedQueues.pdf.length)showToast(`ยัง Error ${failedQueues.pdf.length} รายการ`,'warning');else showToast('Retry PDF สำเร็จทั้งหมด','success');}
+        async function retryPdfJobs(jobs){ if(!jobs.length)return; const fmt=document.getElementById('pdfOutputFormat').value,scale=parseFloat(document.getElementById('pdfScale').value)||2,mime=fmt==='jpeg'?'image/jpeg':'image/png',quality=fmt==='jpeg'?0.92:undefined;startProcessingProgress('Retry PDF Failed Only',jobs.length);for(let i=0;i<jobs.length;i++){const j=jobs[i];try{const page=await j.pdfDoc.getPage(j.pageNum),vp=page.getViewport({scale}),canvas=document.createElement('canvas');assertCanvasSize(vp);canvas.width=vp.width;canvas.height=vp.height;const ctx=canvas.getContext('2d');if(fmt==='jpeg'){ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);}await page.render({canvasContext:ctx,viewport:vp}).promise;const b64=await canvasToBase64(canvas,mime,quality),ext=fmt==='jpeg'?'jpg':'png',name=`${j.baseName}_page${String(j.pageNum).padStart(3,'0')}.${ext}`;pdfZip.file(name,b64,{base64:true});appendDecodedCard(name,name,b64,false,false,{ext,mime,label:fmt.toUpperCase()},`${Math.round(vp.width)}x${Math.round(vp.height)}px`,pdfGallery);pdfStats.success++;pdfStats.error=Math.max(0,pdfStats.error-1);}catch(e){failedQueues.pdf.push(j);}setProcessingProgress('Retry PDF Failed Only',i+1,jobs.length,`${j.fileName} · page ${j.pageNum}`);updatePdfStatsUI();}filterResults('pdfGallery','pdfResultSearch','pdfFilterCount');updateRetryButtons();updateBulkCounts();finishProcessingProgress('Retry complete');if(failedQueues.pdf.length)showToast(`ยัง Error ${failedQueues.pdf.length} รายการ`,'warning');else showToast('Retry PDF สำเร็จทั้งหมด','success');}
 
         // ==================== INTERACTIVE UX ENHANCEMENTS ====================
         function animateStat(id) {
@@ -1681,14 +1732,15 @@ body{overflow-x:hidden}
             document.getElementById('galleryCount').textContent = Object.keys(decodedFilesMap).length;
         }
 
+        // คืน "" ถ้าไม่ใช่ Base64 ที่ถูกต้อง เพื่อไม่ให้ข้อมูลเสียหลุดเข้า ZIP
         function cleanBase64(b64) {
             if (!b64) return "";
-            let cleaned = b64.replace(/^\s*data:image\/(?:jpeg|jpg|png);base64,/i, '').replace(/\s/g, '');
-            let mod = cleaned.length % 4;
-            if (mod !== 0) {
-                cleaned += '='.repeat(4 - mod);
-            }
-            return cleaned;
+            let cleaned = b64.replace(/\\[rnt]/g, '').replace(/\\\//g, '/').replace(/\s/g, '')
+                .replace(/^["']+|["',;]+$/g, '')
+                .replace(/^data:[^,]*;base64,/i, '')
+                .replace(/=+$/, '');
+            if (!/^[A-Za-z0-9+/]+$/.test(cleaned) || cleaned.length % 4 === 1) return "";
+            return cleaned + '='.repeat((4 - cleaned.length % 4) % 4);
         }
 
         // แปลง Base64 (Full String) เป็น Uint8Array เพื่อใช้วิเคราะห์ Header แบบละเอียด
@@ -1796,7 +1848,7 @@ body{overflow-x:hidden}
         // ดึงและแปลง Mapping จาก Textarea
         function getDecodeMapping() {
             const rawMap = document.getElementById('decodeMappingText').value;
-            const mapObj = {};
+            const mapObj = Object.create(null);
             rawMap.split('\n').forEach(line => {
                 const parts = line.split('=');
                 if (parts.length >= 2) {
@@ -1908,10 +1960,9 @@ body{overflow-x:hidden}
                         if (!targetZipPath) {
                             // ถ้าไม่ Map ให้ตั้งโฟลเดอร์เริ่มต้นให้
                             targetZipPath = `output_eApp_images/${origFileName}`;
-                        } else if (targetZipPath.startsWith('/')) {
-                            // JSZip ไม่ต้องการ slash ตัวแรกสุดเพื่อสร้าง Directory ให้อยู่ข้างในสุด
-                            targetZipPath = targetZipPath.substring(1);
                         }
+                        // ตัด slash นำหน้าและส่วน .. ออกก่อนใส่ ZIP
+                        targetZipPath = safeZipPath(targetZipPath, `output_eApp_images/record_${decodeStats.total}.${fileType.ext}`);
 
                         // เช็คชื่อซ้ำตาม Path ปลายทาง
                         let isDuplicate = false;
@@ -2229,7 +2280,7 @@ body{overflow-x:hidden}
                 return;
             }
 
-            const mapObj = {};
+            const mapObj = Object.create(null);
             const lines = rawMapText.split('\n');
             
             lines.forEach(line => {
@@ -2259,13 +2310,13 @@ body{overflow-x:hidden}
                 const statusEl = document.getElementById(`status-badge-${index}`);
 
                 if (mappedName) {
-                    targetEl.textContent = mappedName;
+                    targetEl.textContent = safeZipPath(mappedName, origName);
                     targetEl.className = "py-3 px-4 font-mono text-xs text-emerald-400 font-semibold";
                     statusEl.innerHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-circle-check mr-1 text-[10px]"></i> Matched</span>`;
                     
                     renamedMappingResults.push({
                         originalName: origName,
-                        targetName: mappedName,
+                        targetName: safeZipPath(mappedName, origName),
                         fileRef: file,
                         isMatched: true
                     });
@@ -2313,7 +2364,7 @@ body{overflow-x:hidden}
                 const promise = new Promise((resolve) => {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        let targetPath = item.targetName.startsWith('/') ? item.targetName.substring(1) : item.targetName;
+                        const targetPath = uniqueZipPath(renameZip, safeZipPath(item.targetName, item.originalName));
                         renameZip.file(targetPath, e.target.result);
                         resolve();
                     };
@@ -2731,7 +2782,7 @@ body{overflow-x:hidden}
                 } catch (e) { /* ignore, fallback stays N/A -> img.onload จะเติมให้ทีหลัง */ }
 
                 // ตั้งชื่อไฟล์ปลายทาง (เติมนามสกุลให้ถ้าชื่อที่ให้มายังไม่มีนามสกุล)
-                let baseName = entry.name || autoName;
+                let baseName = safeZipPath(entry.name || autoName, autoName);
                 let fileName = /\.[a-zA-Z0-9]+$/.test(baseName) ? baseName : `${baseName}.${fileType.ext}`;
 
                 // กันชื่อไฟล์ซ้ำ (สะสมข้ามการ Convert หลายรอบ)
@@ -3381,7 +3432,7 @@ body{overflow-x:hidden}
             startProcessingProgress('PDF → Image', 0, 0, 'Reading PDF page counts…');
             failedQueues.pdf=[];
             const pdfDocCache=new Map(); let totalPagesEstimate=0;
-            for(const f of selectedPdfFiles){try{const ab=await f.arrayBuffer();const doc=await pdfjsLib.getDocument({data:ab}).promise;pdfDocCache.set(f,doc);totalPagesEstimate+=doc.numPages;}catch(e){}}
+            for(const f of selectedPdfFiles){try{const ab=await f.arrayBuffer();const doc=await openPdfDocument(ab);pdfDocCache.set(f,doc);totalPagesEstimate+=doc.numPages;}catch(e){}}
             processingUI.total=totalPagesEstimate; setProcessingProgress('PDF → Image',0,totalPagesEstimate,`${selectedPdfFiles.length} PDF file(s) · ${totalPagesEstimate} pages`);
             if (!window['pdfjsLib']) {
                 showToast('ไม่สามารถโหลดไลบรารี PDF.js ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต', 'error');
@@ -3415,7 +3466,7 @@ body{overflow-x:hidden}
 
                 try {
                     const arrayBuffer = await file.arrayBuffer();
-                    const pdfDoc = pdfDocCache.get(file) || await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    const pdfDoc = pdfDocCache.get(file) || await openPdfDocument(arrayBuffer);
                     const numPages = pdfDoc.numPages;
                     const baseName = file.name.replace(/\.pdf$/i, '');
 
@@ -3426,6 +3477,7 @@ body{overflow-x:hidden}
                         try {
                             const page = await pdfDoc.getPage(pageNum);
                             const viewport = page.getViewport({ scale: scale });
+                            assertCanvasSize(viewport);
 
                             const canvas = document.createElement('canvas');
                             canvas.width = viewport.width;
